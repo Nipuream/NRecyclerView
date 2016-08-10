@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="NRecyclerView">
+        <attr name="push_resistance" format="float"/>
+        <attr name="over_resistance" format="float"/>
+        <attr name="duration" format="integer"/>
+        <attr name="pull_eable" format="boolean"/>
+        <attr name="push_able" format="boolean"/>
+        <attr name="over_scroll" format="boolean"/>
+        <attr name="layout_color" format="color"/>
+        <attr name="contentview_color" format="color"/>
+    </declare-styleable>
+
+</resources>

@@ -1,0 +1,45 @@
+<resources>
+    <string name="app_name">MagicLayout</string>
+
+    <string-array name="data">
+
+        <item>material</item>
+        <item>metaphor</item>
+        <item>unifying</item>
+        <item>theory</item>
+        <item>rationalized</item>
+        <item>space</item>
+        <item>system</item>
+        <item>motion</item>
+        <item>grounded</item>
+        <item>tactile</item>
+        <item>reality</item>
+        <item>inspired</item>
+        <item>study</item>
+        <item>paper</item>
+        <item>technologically</item>
+        <item>advanced</item>
+        <item>imagination</item>
+        <item>Surfaces</item>
+        <item>graphic</item>
+        <item>flexibility</item>
+        <item>print</item>
+        <item>elements</item>
+        <item>divides</item>
+        <item>interface</item>
+        <item>immediately</item>
+        <item>conveying</item>
+
+    </string-array>
+
+    <string name="refreshing">正在刷新</string>
+    <string name="refresh_idle">下拉刷新</string>
+    <string name="release_refresh">释放刷新</string>
+
+    <string name="pull_load_more">上拉加载</string>
+    <string name="release_load_more">释放加载</string>
+    <string name="loading">正在加载</string>
+    <string name="no_more">已经没有更多数据</string>
+
+
+</resources>
