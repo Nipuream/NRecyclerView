@@ -11,7 +11,6 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-
 import com.hr.nipuream.NRecyclerView.view.base.BaseLayout;
 import com.hr.nipuream.NRecyclerView.view.base.BaseLoaderView;
 import com.hr.nipuream.NRecyclerView.view.base.BaseRefreshView;
@@ -49,8 +48,6 @@ public class NRecyclerView extends BaseLayout {
 
     @Override
     protected ViewGroup CreateRefreshView(Context context) {
-//        refreshView = LayoutInflater.from(context).
-//                inflate(R.layout.refresh_layout,null);
         LinearLayout headerView = new LinearLayout(context);
         headerView.setOrientation(VERTICAL);
         refreshView = new RefreshView(context);
@@ -88,7 +85,6 @@ public class NRecyclerView extends BaseLayout {
                 }
             }
         });
-
         return contentView;
     }
 
@@ -107,7 +103,6 @@ public class NRecyclerView extends BaseLayout {
                 lastVisiblePos = getMaxElem(lastVisiblePositions);
             }
         }
-
         return lastVisiblePos;
     }
 
@@ -229,13 +224,19 @@ public class NRecyclerView extends BaseLayout {
         }
     }
 
+    public void changeState(boolean isLast){
+        IsLastItem = isLast;
+    }
+
 
     private class DataObserver extends RecyclerView.AdapterDataObserver {
+
 
         @Override
         public void onChanged() {
             if (adapter != null) {
                 adapter.notifyDataSetChanged();
+                changeState(getLastVisibleItem()+2==adapter.getItemCount()?true:false);
             }
         }
 
@@ -359,8 +360,5 @@ public class NRecyclerView extends BaseLayout {
                 super(itemView);
             }
         }
-
     }
-
-
 }

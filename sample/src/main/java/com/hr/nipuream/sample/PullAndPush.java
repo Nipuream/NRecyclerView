@@ -1,12 +1,16 @@
 package com.hr.nipuream.sample;
 
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -19,17 +23,27 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity implements
+public class PullAndPush extends AppCompatActivity implements
         NRecyclerView.RefreshAndLoadingListener{
 
     private NRecyclerView recyclerMagicView;
     private MyAdapter adapter;
     private List<String> datas = new ArrayList<String>();
 
+    private int state = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        toolbar.setTitle("PullAndPush");
+        toolbar.setTitleTextColor(Color.WHITE);
+        setSupportActionBar(toolbar);
+
+
         recyclerMagicView = (NRecyclerView) findViewById(R.id.recyclerMagicView);
         recyclerMagicView.addItemDecoration(new HorizontalDividerItemDecoration.Builder(this).marginResId(R.dimen.margin_left).build(),2);
         recyclerMagicView.setItemAnimator(new DefaultItemAnimator());
@@ -102,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements
                     if(currentPage >= totalPages){
                         recyclerMagicView.pullNoMoreEvent();
                     }else{
-                        datas.add(datas.size(),"加载");
+                        addItems();
                         adapter.setItems(datas);
                         recyclerMagicView.endLoadingMore();
                         currentPage ++;
@@ -112,11 +126,56 @@ public class MainActivity extends AppCompatActivity implements
         }.execute();
     }
 
-    @Override
-    public void onBackPressed() {
-        ViewGroup errorView = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.load_error,(ViewGroup) findViewById(android.R.id.content),false);
-        recyclerMagicView.setEntryView(errorView);
+    private void addItems(){
+        if(state == 1){
+            datas.add(datas.size(),"加载");
+            datas.add(datas.size(),"加载");
+            datas.add(datas.size(),"加载");
+            datas.add(datas.size(),"加载");
+            datas.add(datas.size(),"加载");
+            datas.add(datas.size(),"加载");
+            datas.add(datas.size(),"加载");
+            datas.add(datas.size(),"加载");
+        }else if(state ==2 ){
+            datas.add(datas.size(),"加载");
+        }
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.pull_push_menu,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()){
+            case R.id.normal:
+                state = 1;
+                break;
+            case R.id.load_one_item:
+                state = 2;
+                break;
+            case R.id.over_scroll:
+                recyclerMagicView.setPullLoadEnable(false);
+                recyclerMagicView.setPullRefreshEnable(false);
+                break;
+            case R.id.error:
+                ViewGroup errorView = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.load_error,(ViewGroup) findViewById(android.R.id.content),false);
+                recyclerMagicView.setEntryView(errorView);
+                break;
+            case R.id.reset:
+                state = 1;
+                recyclerMagicView.setPullLoadEnable(true);
+                recyclerMagicView.setPullRefreshEnable(true);
+                recyclerMagicView.resetEntryView();
+                break;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
 
     public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHoader>{
 

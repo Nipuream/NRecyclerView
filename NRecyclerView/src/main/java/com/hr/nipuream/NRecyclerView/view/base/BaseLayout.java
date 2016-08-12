@@ -72,6 +72,12 @@ public abstract class BaseLayout extends LinearLayout{
 
     protected int ITEM_DIVIDE_SIZE = 0;
 
+    /**
+     * 是否是最后一个Item
+     */
+    protected boolean IsLastItem = true;
+
+
     public enum CONTENT_VIEW_STATE{
         NORMAL,
         PUSH,
@@ -182,22 +188,23 @@ public abstract class BaseLayout extends LinearLayout{
                         int bottom = getLocalRectPosition(lastView).bottom;
                         int height = lastView.getHeight();
 
-
                         int count = contentView.getChildCount()-1;
                         int totalHeight = lastView.getHeight() * count + contentView.getChildAt(0).getHeight();
                         int contentHeight = contentView.getHeight();
 
+                        //todo add items height.
+                        totalHeight += ITEM_DIVIDE_SIZE * count;
+
+                        //todo it can't load more if the child hasn't fill over contentView
                         if(totalHeight <
                                 contentHeight)
                             isPullLoadEnable = false;
 
-
-                        if(bottom == height){
-                            mIsBeingDragged = true;
-                            mLastMotionY = y;
-                            state = CONTENT_VIEW_STATE.PUSH;
+                        if(bottom == height && IsLastItem ){
+                                mIsBeingDragged = true;
+                                mLastMotionY = y;
+                                state = CONTENT_VIEW_STATE.PUSH;
                         }
-
                     }
 
                 }else{
@@ -360,6 +367,8 @@ public abstract class BaseLayout extends LinearLayout{
         startMoveAnim(getScrollY(), Math.abs(getScrollY()), duration);
         mIsBeingDragged = false;
         isRefreshing = false;
+        //todo we will load first page data from net.
+        IsLastItem = true;
     }
 
     public void pullMoreEvent(){
@@ -398,7 +407,7 @@ public abstract class BaseLayout extends LinearLayout{
             scrollTo(0,0);
             View childView = contentView.getChildAt(1);
             //todo child height and item divide height.
-            contentView.scrollBy(0,childView.getHeight()+ITEM_DIVIDE_SIZE);
+            contentView.scrollBy(0,childView.getHeight()+ITEM_DIVIDE_SIZE+1);
             isLoadingMore = false;
         }
     }
@@ -486,7 +495,6 @@ public abstract class BaseLayout extends LinearLayout{
         if(refreshView != null){
             headerView.layout(0,-refreshView.getHeight(),getWidth(),0);
         }
-
 
         if(standView == null)
             contentView.layout(0,0,getWidth(),getHeight());

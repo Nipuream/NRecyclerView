@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/normal"
+        android:orderInCategory="100"
+        android:title="Normal"
+        />
+
+    <item
+        android:id="@+id/load_one_item"
+        android:orderInCategory="100"
+        android:title="Load one"
+        />
+
+    <item
+        android:id="@+id/over_scroll"
+        android:orderInCategory="100"
+        android:title="OverScroll effect"
+        />
+
+    <item
+        android:id="@+id/error"
+        android:orderInCategory="100"
+        android:title="Load error"
+        />
+
+    <item
+        android:id="@+id/reset"
+        android:orderInCategory="100"
+        android:title="Reset"
+        />
+
+</menu>
