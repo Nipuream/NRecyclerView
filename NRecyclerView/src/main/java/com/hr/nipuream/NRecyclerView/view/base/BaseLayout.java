@@ -16,7 +16,7 @@ import android.widget.Scroller;
 import com.hr.nipuream.NRecyclerView.R;
 
 /**
- * 描述：
+ * 描述：最外层布局
  * 作者：Nipuream
  * 时间: 2016-08-01 15:16
  * 邮箱：571829491@qq.com
@@ -78,6 +78,9 @@ public abstract class BaseLayout extends LinearLayout{
 
     protected CONTENT_VIEW_STATE state = CONTENT_VIEW_STATE.NORMAL;
 
+    protected LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+
+
     public BaseLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         // TODO Auto-generated constructor stub
@@ -106,7 +109,6 @@ public abstract class BaseLayout extends LinearLayout{
         headerView = CreateRefreshView(context);
         footerView = CreateLoadView(context);
 
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         addView(headerView,layoutParams);
         addView(footerView,layoutParams);
         addView(contentView);
@@ -481,7 +483,11 @@ public abstract class BaseLayout extends LinearLayout{
             headerView.layout(0,-refreshView.getHeight(),getWidth(),0);
         }
 
-        contentView.layout(0,0,getWidth(),getHeight());
+
+        if(standView == null)
+            contentView.layout(0,0,getWidth(),getHeight());
+        else
+            standView.layout(0,0,getWidth(),getHeight());
 
         if(loaderView != null)
             footerView.layout(0,getHeight(),getWidth(),getHeight()+ loaderView.getHeight());

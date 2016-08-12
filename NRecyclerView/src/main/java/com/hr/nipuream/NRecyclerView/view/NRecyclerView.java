@@ -11,11 +11,12 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+
+import com.hr.nipuream.NRecyclerView.view.base.BaseLayout;
 import com.hr.nipuream.NRecyclerView.view.base.BaseLoaderView;
 import com.hr.nipuream.NRecyclerView.view.base.BaseRefreshView;
 import com.hr.nipuream.NRecyclerView.view.base.HeaderStateInterface;
 import com.hr.nipuream.NRecyclerView.view.base.LoaderStateInterface;
-import com.hr.nipuream.NRecyclerView.view.base.BaseLayout;
 import com.hr.nipuream.NRecyclerView.view.impl.LoaderView;
 import com.hr.nipuream.NRecyclerView.view.impl.RefreshView;
 
@@ -75,18 +76,18 @@ public class NRecyclerView extends BaseLayout {
                 int lastVisiblePos = getLastVisibleItem();
                 if( (newState == RecyclerView.SCROLL_STATE_IDLE) &&
                         lastVisiblePos +1 == adapter.getItemCount()){
+
                     //已经滑动到最底端
                     if(!isLoadingMore && isPullLoadEnable){
                         View lastView = contentView.getChildAt(contentView.getChildCount()-1);
                         Rect rect = getLocalRectPosition(lastView);
                         if(lastView.getHeight() == rect.bottom){
-                                pullMoreEvent();
+                            pullMoreEvent();
                         }
                     }
                 }
             }
         });
-
 
         return contentView;
     }
@@ -146,7 +147,31 @@ public class NRecyclerView extends BaseLayout {
         }catch (Exception e){
             e.printStackTrace();
         }
+
     }
+
+    public void addItemDecoration(RecyclerView.ItemDecoration decor){
+        if(contentView != null)
+            ((RecyclerView)contentView).addItemDecoration(decor);
+        else
+            throw new IllegalStateException("You hasn't add contentView in baseLayout");
+    }
+
+    public void addItemDecoration(RecyclerView.ItemDecoration decor,int index){
+        if(contentView != null)
+            ((RecyclerView)contentView).addItemDecoration(decor,index);
+        else
+            throw new IllegalStateException("You hasn't add contentView in baseLayout");
+    }
+
+    public void setItemAnimator(RecyclerView.ItemAnimator animator){
+        if(contentView != null)
+            ((RecyclerView)contentView).setItemAnimator(animator);
+        else
+            throw new IllegalStateException("You hasn't add contentView in baseLayout");
+    }
+
+
 
     @Override
     protected ViewGroup CreateLoadView(Context context) {

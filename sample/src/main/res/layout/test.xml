@@ -9,7 +9,7 @@
     <TextView
         android:id="@+id/tv"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="60dp"
         android:textColor="#000000"
         android:textSize="18sp"
         android:gravity="center"
