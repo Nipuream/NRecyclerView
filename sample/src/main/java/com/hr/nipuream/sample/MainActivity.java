@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         recyclerMagicView = (NRecyclerView) findViewById(R.id.recyclerMagicView);
-        recyclerMagicView.addItemDecoration(new HorizontalDividerItemDecoration.Builder(this).marginResId(R.dimen.margin_left).build());
+        recyclerMagicView.addItemDecoration(new HorizontalDividerItemDecoration.Builder(this).marginResId(R.dimen.margin_left).build(),2);
         recyclerMagicView.setItemAnimator(new DefaultItemAnimator());
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
@@ -102,14 +102,6 @@ public class MainActivity extends AppCompatActivity implements
                     if(currentPage >= totalPages){
                         recyclerMagicView.pullNoMoreEvent();
                     }else{
-                        datas.add(datas.size(),"加载");
-                        datas.add(datas.size(),"加载");
-                        datas.add(datas.size(),"加载");
-                        datas.add(datas.size(),"加载");
-                        datas.add(datas.size(),"加载");
-                        datas.add(datas.size(),"加载");
-                        datas.add(datas.size(),"加载");
-                        datas.add(datas.size(),"加载");
                         datas.add(datas.size(),"加载");
                         adapter.setItems(datas);
                         recyclerMagicView.endLoadingMore();

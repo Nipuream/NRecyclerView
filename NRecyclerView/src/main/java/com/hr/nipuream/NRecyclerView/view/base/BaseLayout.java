@@ -70,6 +70,8 @@ public abstract class BaseLayout extends LinearLayout{
 
     private  boolean overScroll = true;
 
+    protected int ITEM_DIVIDE_SIZE = 0;
+
     public enum CONTENT_VIEW_STATE{
         NORMAL,
         PUSH,
@@ -394,7 +396,9 @@ public abstract class BaseLayout extends LinearLayout{
         if(loaderView != null)
         {
             scrollTo(0,0);
-            contentView.scrollBy(0,loaderView.getHeight()+1);
+            View childView = contentView.getChildAt(1);
+            //todo child height and item divide height.
+            contentView.scrollBy(0,childView.getHeight()+ITEM_DIVIDE_SIZE);
             isLoadingMore = false;
         }
     }

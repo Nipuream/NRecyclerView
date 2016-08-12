@@ -150,16 +150,22 @@ public class NRecyclerView extends BaseLayout {
 
     }
 
-    public void addItemDecoration(RecyclerView.ItemDecoration decor){
+    public void addItemDecoration(RecyclerView.ItemDecoration decor,int size){
         if(contentView != null)
+        {
             ((RecyclerView)contentView).addItemDecoration(decor);
+            ITEM_DIVIDE_SIZE = size;
+        }
         else
             throw new IllegalStateException("You hasn't add contentView in baseLayout");
     }
 
-    public void addItemDecoration(RecyclerView.ItemDecoration decor,int index){
+    public void addItemDecoration(RecyclerView.ItemDecoration decor,int index,int size){
         if(contentView != null)
+        {
             ((RecyclerView)contentView).addItemDecoration(decor,index);
+            ITEM_DIVIDE_SIZE = size;
+        }
         else
             throw new IllegalStateException("You hasn't add contentView in baseLayout");
     }
