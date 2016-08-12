@@ -12,6 +12,9 @@
         android:id="@+id/recyclerMagicView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        app:push_able="false"
+        app:pull_eable="false"
+        app:over_scroll="true"
         />
 
 </RelativeLayout>
