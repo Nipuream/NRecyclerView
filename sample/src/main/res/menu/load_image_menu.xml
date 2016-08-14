@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/span_one"
+        android:orderInCategory="100"
+        android:title="Span_one"
+        />
+    <item
+        android:id="@+id/span_two"
+        android:orderInCategory="100"
+        android:title="Span_two"
+        />
+
+    <item
+        android:id="@+id/span_three"
+        android:orderInCategory="100"
+        android:title="Span_three"
+        />
+
+    <item
+        android:id="@+id/Staggered"
+        android:orderInCategory="100"
+        android:title="Staggered"
+        />
+
+</menu>

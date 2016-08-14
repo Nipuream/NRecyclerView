@@ -22,13 +22,15 @@ public class InitActivity extends AppCompatActivity {
 
         setSupportActionBar(toolbar);
 
-       // Navigation Icon 要設定在 setSupoortActionBar 才有作用
-       // 否則會出現 back button
 //        toolbar.setNavigationIcon(R.mipmap.ic_launcher);
     }
 
     public void pull_push(View view){
         startActivity(new Intent(this,PullAndPush.class));
+    }
+
+    public void load_image(View view){
+         startActivity(new Intent(this,LoadImage.class));
     }
 
 }

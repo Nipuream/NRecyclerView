@@ -29,8 +29,9 @@ public class PullAndPush extends AppCompatActivity implements
     private NRecyclerView recyclerMagicView;
     private MyAdapter adapter;
     private List<String> datas = new ArrayList<String>();
-
     private int state = 1;
+
+    private List<String> currentDatas = new ArrayList<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,10 +43,16 @@ public class PullAndPush extends AppCompatActivity implements
         toolbar.setTitle("PullAndPush");
         toolbar.setTitleTextColor(Color.WHITE);
         setSupportActionBar(toolbar);
-
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
 
         recyclerMagicView = (NRecyclerView) findViewById(R.id.recyclerMagicView);
-        recyclerMagicView.addItemDecoration(new HorizontalDividerItemDecoration.Builder(this).marginResId(R.dimen.margin_left).build(),2);
+        recyclerMagicView.addItemDecoration(new HorizontalDividerItemDecoration.Builder(this).marginResId(R.dimen.margin_left).build());
         recyclerMagicView.setItemAnimator(new DefaultItemAnimator());
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
@@ -59,14 +66,19 @@ public class PullAndPush extends AppCompatActivity implements
         View view = LayoutInflater.from(this).inflate(R.layout.adventure_layout,(ViewGroup)findViewById(android.R.id.content),false);
         recyclerMagicView.setAdtureView(view);
 
-        List<String> strs = Arrays.asList(getResources().getStringArray(R.array.data));
-        datas.addAll(strs);
-        adapter = new MyAdapter(datas);
+        datas = Arrays.asList(getResources().getStringArray(R.array.data));
+
+        addItems();
+        adapter = new MyAdapter(currentDatas);
         recyclerMagicView.setAdapter(adapter);
     }
 
+
+
     @Override
     public void refresh() {
+
+        currentPage = 1;
 
         new AsyncTask<Void,Void,Integer>(){
             @Override
@@ -84,8 +96,8 @@ public class PullAndPush extends AppCompatActivity implements
                 super.onPostExecute(integer);
                 if(integer == 1){
                     recyclerMagicView.resetEntryView();
-                    datas.add(0,"刷新");
-                    adapter.setItems(datas);
+                    addItems();
+                    adapter.setItems(currentDatas);
                     recyclerMagicView.endRefresh();
                 }
             }
@@ -94,10 +106,13 @@ public class PullAndPush extends AppCompatActivity implements
     }
 
     private int currentPage = 1;
-    private int totalPages = 5;
+    private int totalPages = 6;
 
     @Override
     public void load() {
+
+        currentPage ++;
+
         new AsyncTask<Void,Void,Integer>(){
             @Override
             protected Integer doInBackground(Void... params) {
@@ -112,33 +127,32 @@ public class PullAndPush extends AppCompatActivity implements
             @Override
             protected void onPostExecute(Integer integer) {
                 super.onPostExecute(integer);
-                if(integer == 1){
+
                     if(currentPage >= totalPages){
                         recyclerMagicView.pullNoMoreEvent();
                     }else{
                         addItems();
-                        adapter.setItems(datas);
+                        adapter.setItems(currentDatas);
                         recyclerMagicView.endLoadingMore();
-                        currentPage ++;
                     }
-                }
+
             }
         }.execute();
     }
 
     private void addItems(){
-        if(state == 1){
-            datas.add(datas.size(),"加载");
-            datas.add(datas.size(),"加载");
-            datas.add(datas.size(),"加载");
-            datas.add(datas.size(),"加载");
-            datas.add(datas.size(),"加载");
-            datas.add(datas.size(),"加载");
-            datas.add(datas.size(),"加载");
-            datas.add(datas.size(),"加载");
-        }else if(state ==2 ){
-            datas.add(datas.size(),"加载");
+
+        List<String> strs = new ArrayList<>();
+
+        for(int i= (currentPage-1)*15;i<currentPage*15;i++ ){
+            strs.add(datas.get(i));
         }
+
+        if(recyclerMagicView.isRefreshing())
+            currentDatas = strs;
+        else
+            currentDatas.addAll(strs);
+
     }
 
     @Override
@@ -153,9 +167,6 @@ public class PullAndPush extends AppCompatActivity implements
         switch (item.getItemId()){
             case R.id.normal:
                 state = 1;
-                break;
-            case R.id.load_one_item:
-                state = 2;
                 break;
             case R.id.over_scroll:
                 recyclerMagicView.setPullLoadEnable(false);

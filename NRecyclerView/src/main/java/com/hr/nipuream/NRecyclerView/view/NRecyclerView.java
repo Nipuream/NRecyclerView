@@ -58,21 +58,22 @@ public class NRecyclerView extends BaseLayout {
     @Override
     protected ViewGroup CreateEntryView(final Context context, AttributeSet attrs) {
         contentView = new RecyclerView(context,attrs);
-        ((RecyclerView)contentView).addOnScrollListener(new OnScrollListener() {
 
+        ((RecyclerView)contentView).addOnScrollListener(new OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
             }
-
             //todo we should load more when recyclerView scroll to bottom.
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
 
+                IsFirstItem = getFirstVisibleItem()==0?true:false;
                 int lastVisiblePos = getLastVisibleItem();
                 if( (newState == RecyclerView.SCROLL_STATE_IDLE) &&
                         lastVisiblePos +1 == adapter.getItemCount()){
+                    IsLastItem = true;
 
                     //已经滑动到最底端
                     if(!isLoadingMore && isPullLoadEnable){
@@ -83,6 +84,8 @@ public class NRecyclerView extends BaseLayout {
                         }
                     }
                 }
+                else
+                    IsLastItem = false;
             }
         });
         return contentView;
@@ -104,6 +107,24 @@ public class NRecyclerView extends BaseLayout {
             }
         }
         return lastVisiblePos;
+    }
+
+    private int getFirstVisibleItem(){
+        int firstVisblePos = -1;
+
+        if(layoutManager != null){
+            if(layoutManager instanceof  LinearLayoutManager)
+                firstVisblePos = ((LinearLayoutManager) layoutManager).findFirstVisibleItemPosition();
+            else if(layoutManager instanceof GridLayoutManager)
+                firstVisblePos = ((GridLayoutManager) layoutManager).findFirstVisibleItemPosition();
+            else if(layoutManager instanceof StaggeredGridLayoutManager)
+            {
+               int[] firstVisblePosSpan =  ((StaggeredGridLayoutManager) layoutManager).findFirstVisibleItemPositions(new int[((StaggeredGridLayoutManager) layoutManager).getSpanCount()]);
+                firstVisblePos = firstVisblePosSpan[0];
+            }
+        }
+
+        return firstVisblePos;
     }
 
 
@@ -145,11 +166,10 @@ public class NRecyclerView extends BaseLayout {
 
     }
 
-    public void addItemDecoration(RecyclerView.ItemDecoration decor,int size){
+    public void addItemDecoration(RecyclerView.ItemDecoration decor){
         if(contentView != null)
         {
             ((RecyclerView)contentView).addItemDecoration(decor);
-            ITEM_DIVIDE_SIZE = size;
         }
         else
             throw new IllegalStateException("You hasn't add contentView in baseLayout");
@@ -159,7 +179,6 @@ public class NRecyclerView extends BaseLayout {
         if(contentView != null)
         {
             ((RecyclerView)contentView).addItemDecoration(decor,index);
-            ITEM_DIVIDE_SIZE = size;
         }
         else
             throw new IllegalStateException("You hasn't add contentView in baseLayout");
@@ -224,6 +243,7 @@ public class NRecyclerView extends BaseLayout {
         }
     }
 
+    //TODO update last item state.
     public void changeState(boolean isLast){
         IsLastItem = isLast;
     }
@@ -236,13 +256,15 @@ public class NRecyclerView extends BaseLayout {
         public void onChanged() {
             if (adapter != null) {
                 adapter.notifyDataSetChanged();
-                changeState(getLastVisibleItem()+2==adapter.getItemCount()?true:false);
             }
         }
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
-            adapter.notifyItemRangeInserted(positionStart, itemCount);
+            if(adapter != null){
+                adapter.notifyItemRangeInserted(positionStart, itemCount);
+                changeState(getLastVisibleItem()+2==adapter.getItemCount()?true:false);
+            }
         }
 
         @Override
@@ -262,7 +284,10 @@ public class NRecyclerView extends BaseLayout {
 
         @Override
         public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
-            adapter.notifyItemMoved(fromPosition, toPosition);
+            if(adapter != null){
+                adapter.notifyItemMoved(fromPosition, toPosition);
+                changeState(getLastVisibleItem()+2==adapter.getItemCount()?true:false);
+            }
         }
     };
 

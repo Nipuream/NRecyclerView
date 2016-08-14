@@ -19,6 +19,11 @@ android {
     }
 }
 
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -26,4 +31,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.2.1'
     compile project(':NRecyclerView')
     compile 'com.yqritc:recyclerview-flexibledivider:1.4.0'
+    compile 'com.android.support:cardview-v7:23.2.1'
+    compile 'dev.dworks.libs:volleyplus:+'
 }

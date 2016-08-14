@@ -4,32 +4,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.hr.nipuream.sample.InitActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="com.hr.nipuream.sample.LoadImage">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_height="?attr/actionBarSize"
         android:layout_width="match_parent"
-        android:background="?attr/colorPrimary" >
-
+        android:background="?attr/colorPrimary"
+        >
     </android.support.v7.widget.Toolbar>
 
-    <Button
-        android:id="@+id/pull_and_push"
+
+    <com.hr.nipuream.NRecyclerView.view.NRecyclerView
+        android:id="@+id/recyclerMagicView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Pull and push"
-        android:onClick="pull_push"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"
+        app:contentview_color="@color/dim_foreground_material_dark"
         />
-
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="load more Image"
-        android:onClick="load_image"
-        />
-
 
 
 </LinearLayout>

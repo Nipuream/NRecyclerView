@@ -12,11 +12,10 @@ import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.Scroller;
-
 import com.hr.nipuream.NRecyclerView.R;
 
 /**
- * 描述：最外层布局
+ * 描述：The outest layout
  * 作者：Nipuream
  * 时间: 2016-08-01 15:16
  * 邮箱：571829491@qq.com
@@ -70,12 +69,15 @@ public abstract class BaseLayout extends LinearLayout{
 
     private  boolean overScroll = true;
 
-    protected int ITEM_DIVIDE_SIZE = 0;
 
     /**
      * 是否是最后一个Item
      */
     protected boolean IsLastItem = true;
+
+    protected  boolean IsFirstItem = true;
+
+    private boolean FirstLoadState = false;
 
 
     public enum CONTENT_VIEW_STATE{
@@ -139,6 +141,7 @@ public abstract class BaseLayout extends LinearLayout{
         overResistance = array.getFloat(R.styleable.NRecyclerView_over_resistance,0.4f);
         resistance = array.getFloat(R.styleable.NRecyclerView_push_resistance,0.6f);
         overScroll = array.getBoolean(R.styleable.NRecyclerView_over_scroll,true);
+        FirstLoadState = isPullLoadEnable;
 
         array.recycle();
     }
@@ -176,7 +179,7 @@ public abstract class BaseLayout extends LinearLayout{
                 if(standView == null){
 
                     if(absDiff > mTouchSlop && diff > 1){
-                        if(getLocalRectPosition(contentView.getChildAt(0)).top == 0){
+                        if(getLocalRectPosition(contentView.getChildAt(0)).top == 0 && IsFirstItem){
                             mIsBeingDragged = true;
                             mLastMotionY = y;
                             state = CONTENT_VIEW_STATE.PULL;
@@ -192,8 +195,6 @@ public abstract class BaseLayout extends LinearLayout{
                         int totalHeight = lastView.getHeight() * count + contentView.getChildAt(0).getHeight();
                         int contentHeight = contentView.getHeight();
 
-                        //todo add items height.
-                        totalHeight += ITEM_DIVIDE_SIZE * count;
 
                         //todo it can't load more if the child hasn't fill over contentView
                         if(totalHeight <
@@ -201,9 +202,9 @@ public abstract class BaseLayout extends LinearLayout{
                             isPullLoadEnable = false;
 
                         if(bottom == height && IsLastItem ){
-                                mIsBeingDragged = true;
-                                mLastMotionY = y;
-                                state = CONTENT_VIEW_STATE.PUSH;
+                            mIsBeingDragged = true;
+                            mLastMotionY = y;
+                            state = CONTENT_VIEW_STATE.PUSH;
                         }
                     }
 
@@ -301,16 +302,17 @@ public abstract class BaseLayout extends LinearLayout{
                             {
                                 if((int) (upY * resistance) < (refreshView.getHeight()/2 * 3))
                                 {
-                                    //直接缩回去
+                                    //todo goback
                                     startMoveAnim(getScrollY(), Math.abs(getScrollY()), duration);
                                 }else{
-                                    //执行刷新
+                                    //todo start refreshing
                                     startMoveAnim(getScrollY(),Math.abs(getScrollY()) -
                                             refreshView.getHeight(),duration);
                                     refreshView.setState(HeaderStateInterface.REFRESHING);
                                     isRefreshing = true;
                                     if(l != null)
                                     {
+                                        setPullLoadEnable(FirstLoadState);
                                         l.refresh();
                                         if(loaderView != null)
                                             loaderView.setVisibility(View.VISIBLE);
@@ -326,8 +328,7 @@ public abstract class BaseLayout extends LinearLayout{
                     }else if(state == CONTENT_VIEW_STATE.PUSH){
                         if(standView == null){
                             if(isPullLoadEnable){
-                                //加载更多
-
+                                //todo loadmore
                                 if(loaderView !=null)
                                 {
                                     int absUpy = (int) Math.abs(upY);
@@ -379,8 +380,8 @@ public abstract class BaseLayout extends LinearLayout{
                 loaderView.setState(LoaderStateInterface.LOADING_MORE);
                 scrollTo(0,loaderView.getHeight());
                 isLoadingMore = true;
-                if(l != null)
-                    l.load();
+                IsLastItem = true;
+                if(l != null)l.load();
             }
         }
     }
@@ -405,9 +406,8 @@ public abstract class BaseLayout extends LinearLayout{
         if(loaderView != null)
         {
             scrollTo(0,0);
-            View childView = contentView.getChildAt(1);
-            //todo child height and item divide height.
-            contentView.scrollBy(0,childView.getHeight()+ITEM_DIVIDE_SIZE+1);
+            //todo handle contentView visible item like normal.
+            contentView.scrollBy(0,loaderView.getHeight());
             isLoadingMore = false;
         }
     }

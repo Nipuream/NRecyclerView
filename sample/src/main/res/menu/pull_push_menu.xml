@@ -8,11 +8,6 @@
         android:title="Normal"
         />
 
-    <item
-        android:id="@+id/load_one_item"
-        android:orderInCategory="100"
-        android:title="Load one"
-        />
 
     <item
         android:id="@+id/over_scroll"

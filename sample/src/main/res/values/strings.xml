@@ -1,3 +1,103 @@
 <resources>
     <string name="app_name">sample</string>
+
+
+    <string-array name="data">
+
+        <item>material</item>
+        <item>metaphor</item>
+        <item>unifying</item>
+        <item>theory</item>
+        <item>rationalized</item>
+        <item>space</item>
+        <item>system</item>
+        <item>motion</item>
+        <item>grounded</item>
+        <item>tactile</item>
+        <item>reality</item>
+        <item>inspired</item>
+        <item>study</item>
+        <item>paper</item>
+        <item>technologically</item>
+        <item>advanced</item>
+        <item>imagination</item>
+        <item>Surfaces</item>
+        <item>graphic</item>
+        <item>flexibility</item>
+        <item>print</item>
+        <item>elements</item>
+        <item>divides</item>
+        <item>interface</item>
+        <item>immediately</item>
+        <item>conveying</item>
+        <item>meaning</item>
+        <item>dynamic</item>
+        <item>elevation</item>
+        <item>component</item>
+        <item>encounter</item>
+        <item>another</item>
+        <item>offsets</item>
+        <item>greater</item>
+        <item>cancelled</item>
+        <item>responsive</item>
+        <item>layout</item>
+        <item>cards</item>
+        <item>interface</item>
+        <item>pick</item>
+        <item>depending</item>
+        <item>depth</item>
+        <item>position</item>
+        <item>return</item>
+        <item>goal</item>
+        <item>these</item>
+        <item>remove</item>
+        <item>cards</item>
+        <item>floating</item>
+        <item>action</item>
+        <item>ensure</item>
+        <item>resting</item>
+        <item>state</item>
+        <item>normal</item>
+        <item>change</item>
+        <item>lift</item>
+        <item>press</item>
+        <item>consistently</item>
+        <item>example</item>
+        <item>level</item>
+        <item>tries</item>
+        <item>through</item>
+        <item>cause</item>
+        <item>interference</item>
+        <item>across</item>
+        <item>whether</item>
+        <item>bankcode</item>
+        <item>subtle</item>
+        <item>feedback</item>
+        <item>appropriate</item>
+        <item>serving</item>
+        <item>focus</item>
+        <item>attention</item>
+        <item>maintain</item>
+        <item>continuity</item>
+        <item>emulated</item>
+        <item>shadow</item>
+        <item>only</item>
+        <item>regradless</item>
+        <item>object</item>
+        <item>environment</item>
+        <item>different</item>
+        <item>types</item>
+        <item>depicted</item>
+        <item>along</item>
+        <item>should</item>
+        <item>possible</item>
+        <item>meaning</item>
+        <item>object</item>
+        <item>height</item>
+
+    </string-array>
+
+
+
+
 </resources>
