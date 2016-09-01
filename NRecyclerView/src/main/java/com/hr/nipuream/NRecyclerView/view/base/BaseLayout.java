@@ -4,7 +4,12 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.support.v4.view.NestedScrollingParent;
+import android.support.v4.view.NestedScrollingParentHelper;
+import android.support.v4.view.ViewCompat;
+import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -15,23 +20,22 @@ import android.widget.Scroller;
 import com.hr.nipuream.NRecyclerView.R;
 
 /**
- * 描述：The outest layout
+ * 描述：最外层的布局，支持嵌套滚动
+ * 职责：刷新、加载
  * 作者：Nipuream
  * 时间: 2016-08-01 15:16
  * 邮箱：571829491@qq.com
  */
-public abstract class BaseLayout extends LinearLayout{
+public abstract class BaseLayout extends LinearLayout implements NestedScrollingParent {
 
     private int mTouchSlop;
     protected boolean mIsBeingDragged = false;
     private float mLastMotionY;
     protected float  mInitialMotionY;
-
     /**
      * push、pull 阻尼系数
      */
     private float resistance = 0.6f;
-
     /**
      * OverScroll 效果阻尼系数
      */
@@ -39,18 +43,16 @@ public abstract class BaseLayout extends LinearLayout{
     private Scroller mScroller;
     //    private ListView mListView;
     private boolean isMove = false;
-
     /**
      * push、pull 回退时间
      */
     private int duration = 300;
-    //    private ScrollRershListener l;
+
     protected boolean isRefreshing = false;
     protected boolean isLoadingMore = false;
     protected ViewGroup headerView;
     protected ViewGroup footerView;
     protected ViewGroup contentView;
-
     /**
      * refresh enable
      */
@@ -69,7 +71,7 @@ public abstract class BaseLayout extends LinearLayout{
 
     private  boolean overScroll = true;
 
-
+    protected int ITEM_DIVIDE_SIZE = 0;
     /**
      * 是否是最后一个Item
      */
@@ -78,6 +80,10 @@ public abstract class BaseLayout extends LinearLayout{
     protected  boolean IsFirstItem = true;
 
     private boolean FirstLoadState = false;
+
+    protected String innerView = "none";
+
+    private NestedScrollingParentHelper mNestedScrollingParentHelper;
 
 
     public enum CONTENT_VIEW_STATE{
@@ -109,16 +115,60 @@ public abstract class BaseLayout extends LinearLayout{
 
     private void init(final Context context, AttributeSet attrs,int defStyleAttr){
 
+        mNestedScrollingParentHelper = new NestedScrollingParentHelper(this);
         setOrientation(VERTICAL);
         ViewConfiguration config = ViewConfiguration.get(context);
         mTouchSlop = config.getScaledTouchSlop();
         DecelerateInterpolator interpolator = new DecelerateInterpolator();
         mScroller = new Scroller(context,interpolator);
 
-        contentView = CreateEntryView(context,attrs);
+        TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.NRecyclerView);
+        duration = array.getInteger(R.styleable.NRecyclerView_duration,500);
+
+        setBackgroundColor(array.getColor(R.styleable.NRecyclerView_layout_color,backgroundColor));
+        isPullRefreshEnable = array.getBoolean(R.styleable.NRecyclerView_pull_eable,true);
+        isPullLoadEnable = array.getBoolean(R.styleable.NRecyclerView_push_able,true);
+        overResistance = array.getFloat(R.styleable.NRecyclerView_over_resistance,0.4f);
+        resistance = array.getFloat(R.styleable.NRecyclerView_push_resistance,0.6f);
+        overScroll = array.getBoolean(R.styleable.NRecyclerView_over_scroll,true);
+        innerView = array.getString(R.styleable.NRecyclerView_inner_view);
+
+        if(TextUtils.isEmpty(innerView))
+            innerView = "none";
+
+        FirstLoadState = isPullLoadEnable;
+        contentView = CreateEntryView(context,attrs,innerView);
         headerView = CreateRefreshView(context);
         footerView = CreateLoadView(context);
 
+        /**
+         * 线性布局摆放很有讲究，其中HeaderView和FooterView在屏幕
+         * 的外面，如果添加顺序为 headerView,contentView,FooterView,
+         * 那么，很可惜，你始终看不到FooterView，因为ContentView占据的
+         * 位置是match_parent，解决的方案是 先添加FooterView,然后再
+         * 添加ContentView,最后在onLayout()方法里面去设置下他们分别所在的
+         * 区域位置
+         * @See onLayout
+         *
+         * |---------------------------|<-----------
+         * |                           |   HeaderView
+         * |---------------------------|<-----------
+         * |                           |
+         * |                           |
+         * |                           |
+         * |                           |
+         * |                           |
+         * |                           |    屏幕(ContentView)
+         * |                           |
+         * |                           |
+         * |                           |
+         * |                           |
+         * |                           |
+         * |                           |
+         * |-------------------------- |<------------
+         * |                           |    FooterView
+         * |---------------------------|<-------------
+         */
         addView(headerView,layoutParams);
         addView(footerView,layoutParams);
         addView(contentView);
@@ -131,18 +181,7 @@ public abstract class BaseLayout extends LinearLayout{
 //        headerView.addView(refreshView,layoutParams);
 //        footerView.addView(loaderView,layoutParams);
 
-        TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.NRecyclerView);
-
-        duration = array.getInteger(R.styleable.NRecyclerView_duration,500);
         contentView.setBackgroundColor(array.getColor(R.styleable.NRecyclerView_contentview_color,contentViewColor));
-        setBackgroundColor(array.getColor(R.styleable.NRecyclerView_layout_color,backgroundColor));
-        isPullRefreshEnable = array.getBoolean(R.styleable.NRecyclerView_pull_eable,true);
-        isPullLoadEnable = array.getBoolean(R.styleable.NRecyclerView_push_able,true);
-        overResistance = array.getFloat(R.styleable.NRecyclerView_over_resistance,0.4f);
-        resistance = array.getFloat(R.styleable.NRecyclerView_push_resistance,0.6f);
-        overScroll = array.getBoolean(R.styleable.NRecyclerView_over_scroll,true);
-        FirstLoadState = isPullLoadEnable;
-
         array.recycle();
     }
 
@@ -171,6 +210,9 @@ public abstract class BaseLayout extends LinearLayout{
                 if(isRefreshing || isLoadingMore)
                     return true;
 
+                if(!overScroll)
+                    return super.onInterceptTouchEvent(ev);
+
                 final float y = ev.getY(), x = ev.getX();
                 final float diff, absDiff;
                 diff = y - mLastMotionY;
@@ -191,15 +233,7 @@ public abstract class BaseLayout extends LinearLayout{
                         int bottom = getLocalRectPosition(lastView).bottom;
                         int height = lastView.getHeight();
 
-                        int count = contentView.getChildCount()-1;
-                        int totalHeight = lastView.getHeight() * count + contentView.getChildAt(0).getHeight();
-                        int contentHeight = contentView.getHeight();
-
-
-                        //todo it can't load more if the child hasn't fill over contentView
-                        if(totalHeight <
-                                contentHeight)
-                            isPullLoadEnable = false;
+                        isFillContent();
 
                         if(bottom == height && IsLastItem ){
                             mIsBeingDragged = true;
@@ -228,23 +262,44 @@ public abstract class BaseLayout extends LinearLayout{
         return mIsBeingDragged;
     }
 
-    public Rect getLocalRectPosition(View view){
+    private Rect rect = new Rect();
 
-        Rect rect = new Rect();
+    public Rect getLocalRectPosition(View view){
 
         if(view != null)
         {
             view.getLocalVisibleRect(rect);
             return rect;
-        }
+        }else
+            rect = new Rect();
 
         return rect;
+    }
+
+    /**
+     * 如果开始，contentView中的内容没有填满，
+     * 则我们设置为 pullLoad 为 false.
+     */
+    private void isFillContent(){
+
+        //第一个Child可能是广告位
+        int count = contentView.getChildCount()-1;
+        int totalHeight = contentView.getChildAt(contentView.getChildCount()-1)
+                .getHeight() * count + contentView.getChildAt(0).getHeight();
+        int contentHeight = contentView.getHeight();
+
+        //添加 item decor 的高度
+        totalHeight += ITEM_DIVIDE_SIZE * count;
+
+        if(totalHeight <
+                contentHeight)
+            isPullLoadEnable = false;
     }
 
 
     protected abstract ViewGroup CreateRefreshView(Context context);
 
-    protected abstract ViewGroup CreateEntryView(Context context,AttributeSet attrs);
+    protected abstract ViewGroup CreateEntryView(Context context,AttributeSet attrs,String innerView);
 
     protected abstract ViewGroup CreateLoadView(Context context);
 
@@ -264,6 +319,10 @@ public abstract class BaseLayout extends LinearLayout{
         isPullLoadEnable = enable;
     }
 
+    public void setOverScrollEnable(boolean enable){
+        overScroll = enable;
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 
@@ -271,8 +330,7 @@ public abstract class BaseLayout extends LinearLayout{
                 && event.getEdgeFlags() != 0)
             return false;
 
-        if(isMove)
-            return false;
+        if(isMove)  return false;
 
         switch(event.getAction()){
             case MotionEvent.ACTION_DOWN:{
@@ -300,12 +358,12 @@ public abstract class BaseLayout extends LinearLayout{
 
                             if(refreshView != null)
                             {
-                                if((int) (upY * resistance) < (refreshView.getHeight()/2 * 3))
+                                if((int) (upY * resistance) < refreshView.getHeight())
                                 {
-                                    //todo goback
+                                    //TODO GOBACK
                                     startMoveAnim(getScrollY(), Math.abs(getScrollY()), duration);
                                 }else{
-                                    //todo start refreshing
+                                    //TODO 刷新
                                     startMoveAnim(getScrollY(),Math.abs(getScrollY()) -
                                             refreshView.getHeight(),duration);
                                     refreshView.setState(HeaderStateInterface.REFRESHING);
@@ -328,12 +386,12 @@ public abstract class BaseLayout extends LinearLayout{
                     }else if(state == CONTENT_VIEW_STATE.PUSH){
                         if(standView == null){
                             if(isPullLoadEnable){
-                                //todo loadmore
+                                //TODO LOAD MORE...
                                 if(loaderView !=null)
                                 {
                                     int absUpy = (int) Math.abs(upY);
 
-                                    if((absUpy*resistance) < (loaderView.getHeight()/2*3))
+                                    if((absUpy*resistance) < loaderView.getHeight())
                                     {
                                         startMoveAnim(getScrollY(),-getScrollY() ,duration);
                                     }else{
@@ -365,11 +423,13 @@ public abstract class BaseLayout extends LinearLayout{
 
 
     public void endRefresh(){
-        startMoveAnim(getScrollY(), Math.abs(getScrollY()), duration);
-        mIsBeingDragged = false;
-        isRefreshing = false;
-        //todo we will load first page data from net.
-        IsLastItem = true;
+        if(isRefreshing()){
+            startMoveAnim(getScrollY(), Math.abs(getScrollY()), duration);
+            mIsBeingDragged = false;
+            isRefreshing = false;
+            //TODO 我们将会加载第一页数据
+            IsLastItem = true;
+        }
     }
 
     public void pullMoreEvent(){
@@ -381,7 +441,7 @@ public abstract class BaseLayout extends LinearLayout{
                 scrollTo(0,loaderView.getHeight());
                 isLoadingMore = true;
                 IsLastItem = true;
-                if(l != null)l.load();
+                if(l != null) l.load();
             }
         }
     }
@@ -403,17 +463,20 @@ public abstract class BaseLayout extends LinearLayout{
     }
 
     public void endLoadingMore(){
-        if(loaderView != null)
-        {
-            scrollTo(0,0);
-            //todo handle contentView visible item like normal.
-            contentView.scrollBy(0,loaderView.getHeight());
-            isLoadingMore = false;
+        if(isLoadingMore()){
+            if(loaderView != null)
+            {
+                scrollTo(0,0);
+                //TODO 把contentView底下的子View 滚上来，看起来就没有违和感
+                contentView.scrollBy(0,loaderView.getHeight());
+                isLoadingMore = false;
+            }
         }
     }
 
     public void pullEvent(float moveY){
         int value = (int) Math.abs(moveY);
+        Log.d("state",state+"");
         if(moveY > 0){
             if(state == CONTENT_VIEW_STATE.PULL)
             {
@@ -422,7 +485,7 @@ public abstract class BaseLayout extends LinearLayout{
                     if(refreshView != null){
                         refreshView.setVisibility(View.VISIBLE);
                         scrollTo(0, - (int)(value*resistance));
-                        if((int) (moveY * resistance) >= (refreshView.getHeight()/2 * 3))
+                        if((int) (moveY * resistance) >= refreshView.getHeight())
                             refreshView.setState(HeaderStateInterface.RELEASE_REFRESH);
                         else
                             refreshView.setState(HeaderStateInterface.IDLE);
@@ -440,9 +503,9 @@ public abstract class BaseLayout extends LinearLayout{
                 if(isPullLoadEnable)
                 {
                     if(loaderView !=null){
-                        loaderView.setVisibility(View.VISIBLE);
+//                        loaderView.setVisibility(View.VISIBLE);
                         scrollTo(0, (int) (value*resistance));
-                        if((int)(value*resistance)>=loaderView.getHeight()/2*3)
+                        if((int)(value*resistance)>=loaderView.getHeight())
                             loaderView.setState(LoaderStateInterface.RELEASE_LOAD_MORE);
                         else
                             loaderView.setState(LoaderStateInterface.IDLE);
@@ -488,6 +551,10 @@ public abstract class BaseLayout extends LinearLayout{
         this.l = l;
     }
 
+
+    /**
+     * 调整布局中各个控件的位置
+     */
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
@@ -503,6 +570,131 @@ public abstract class BaseLayout extends LinearLayout{
 
         if(loaderView != null)
             footerView.layout(0,getHeight(),getWidth(),getHeight()+ loaderView.getHeight());
+    }
+
+
+    @Override
+    public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
+
+        //----------------------------------------------------------------------------
+        /**
+         * 设置 isNest的作用是 如果加载完了之后，就没有必要在嵌套滑动了
+         * 因为每次这个方法会拦截事件，虽然拦截没有处理任何事情，返回给BaseLayout处理还是会出现小许的卡顿，
+         * 不信可以亲试
+         */
+        boolean isNest = true;
+        if(loaderView != null)
+            isNest = (loaderView.getState() ==
+                    LoaderStateInterface.NO_MORE)?false:true;
+        //--------------------------------------------------------------------------------
+
+        return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 && isNest;
+    }
+
+    @Override
+    public void onNestedScrollAccepted(View child, View target, int axes) {
+        mNestedScrollingParentHelper.onNestedScrollAccepted(child, target, axes);
+    }
+
+    @Override
+    public void onStopNestedScroll(View child) {
+
+        mNestedScrollingParentHelper.onStopNestedScroll(child);
+
+        if(state == CONTENT_VIEW_STATE.PUSH){
+            if(standView == null){
+                if(isPullLoadEnable){
+                    //TODO LOADMORE...
+                    if(loaderView !=null)
+                    {
+                        int absUpy = Math.abs(nestMoveY);
+
+                        if((absUpy*resistance) < loaderView.getHeight())
+                        {
+                            startMoveAnim(getScrollY(),-getScrollY() ,duration);
+                        }else{
+                            if(isPullLoadEnable){
+                                startMoveAnim(getScrollY(),-(Math.abs(getScrollY())-loaderView.getHeight()),duration);
+                                loaderView.setState(LoaderStateInterface.LOADING_MORE);
+                                isLoadingMore = true;
+                                if(l !=null)  l.load();
+                            }
+                        }
+                    }
+                }else{
+                    if(overScroll)
+                        startMoveAnim(getScrollY(),-getScrollY() ,duration);
+                }
+            }else{
+                startMoveAnim(getScrollY(),-getScrollY() ,duration);
+            }
+            //TODO  把状态设置为NORMAL,因为onNestStop方法会调用多次
+            state = CONTENT_VIEW_STATE.NORMAL;
+            isNestLoad = false;
+        }
+
+        nestMoveY = 0;
+    }
+
+    @Override
+    public void onNestedScroll(View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
+        //TODO 因为5.0以下的手机会报 LinearLayout 没有onNestedScroll方法
+//        super.onNestedScroll(target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed);
+    }
+
+    private int nestMoveY = 0;
+    protected boolean isNestLoad = false;
+
+    @Override
+    public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
+
+        View lastView = contentView.getChildAt(contentView.getChildCount()-1);
+        Rect rect = getLocalRectPosition(lastView);
+        if(rect.bottom == lastView.getHeight() && IsLastItem){
+
+            nestMoveY += dy;
+            state = CONTENT_VIEW_STATE.PUSH;
+            pullEvent(-nestMoveY);
+            isNestLoad = true;
+
+            //------------------------------------------------------------------
+            /**
+             * 当我们PUSH过程中，底部的FootView出现了，再往下PULL，
+             * 那么contentView中的内容也会随之一起滚动，所以，我们这里要把事件消费掉。
+             */
+            if(nestMoveY > 0){
+                consumed[0] = dx;
+                consumed[1] = dy;
+            }
+           //---------------------------------------------------------------------
+
+        }
+
+    }
+
+    @Override
+    public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
+        return false;
+    }
+
+    @Override
+    public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
+        Log.d("velocityY",velocityY+"");
+
+        //----------------------------------------------------------
+        /**
+         * 如果用户一直用手拖着，不放然后从中间位置迅猛放下，会导致无法加载现象和onNestStop一样
+         */
+        isNestLoad = false;
+        state = CONTENT_VIEW_STATE.NORMAL;
+        //---------------------------------------------------------
+
+        return false;
+    }
+
+    @Override
+    public int getNestedScrollAxes() {
+        return mNestedScrollingParentHelper.getNestedScrollAxes();
     }
 
 }

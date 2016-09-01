@@ -12,6 +12,7 @@ import android.widget.LinearLayout;
 public class BaseRefreshView extends LinearLayout implements HeaderStateInterface{
 
     protected  Context context;
+    protected  int state;
 
     public BaseRefreshView(Context context) {
         super(context);
@@ -24,6 +25,12 @@ public class BaseRefreshView extends LinearLayout implements HeaderStateInterfac
 
     @Override
     public void setState(int state) {
+        this.state = state;
+    }
+
+    @Override
+    public int getState() {
+        return state;
     }
 
 }

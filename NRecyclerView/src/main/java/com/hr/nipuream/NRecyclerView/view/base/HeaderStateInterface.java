@@ -38,6 +38,7 @@ public interface HeaderStateInterface {
     public void setState(int state);
 
 
+    public int getState();
 
 
 }

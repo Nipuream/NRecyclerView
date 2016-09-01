@@ -31,14 +31,10 @@ public class LoadImage extends AppCompatActivity  implements
         NRecyclerView.RefreshAndLoadingListener{
 
     private NRecyclerView recyclerMagicView;
-
     private List<String> images = new ArrayList<>();
-
     private List<String> currentImages = new ArrayList<>();
-
     private int currentPages = 1;
     private int pages = 5;
-
     private LoadImageAdapter adapter;
 
     @Override
@@ -187,6 +183,7 @@ public class LoadImage extends AppCompatActivity  implements
         private int screenWidth;
         private Random random;
 
+
         public LoadImageAdapter(List<String> images){
             this.images = images;
             DisplayMetrics dm = new DisplayMetrics();
@@ -201,7 +198,7 @@ public class LoadImage extends AppCompatActivity  implements
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.load_image_item,parent,false);
             if(isStaggered){
                 View cardView = view.findViewById(R.id.load_image_cardview);
-                float typedValue = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,random.nextInt(200)+200,getResources().getDisplayMetrics());
+                float typedValue = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,random.nextInt(200)+50,getResources().getDisplayMetrics());
                 ViewGroup.LayoutParams lp = cardView.getLayoutParams();
                 lp.height = (int) typedValue;
                 lp.width = random.nextInt(screenWidth/2)+screenWidth/2;
@@ -214,7 +211,6 @@ public class LoadImage extends AppCompatActivity  implements
         public void onBindViewHolder(ViewHolder holder, int position) {
 
             SampleApp.instance.getmImageLoader().get(images.get(position),holder.iv);
-
         }
 
         @Override

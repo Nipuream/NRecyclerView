@@ -21,7 +21,6 @@ public class InitActivity extends AppCompatActivity {
 //        toolbar.setSubtitle("Sub title");
 
         setSupportActionBar(toolbar);
-
 //        toolbar.setNavigationIcon(R.mipmap.ic_launcher);
     }
 
@@ -31,6 +30,10 @@ public class InitActivity extends AppCompatActivity {
 
     public void load_image(View view){
          startActivity(new Intent(this,LoadImage.class));
+    }
+
+    public void adventrue_zoom(View view){
+        startActivity(new Intent(this,AdZoom.class));
     }
 
 }

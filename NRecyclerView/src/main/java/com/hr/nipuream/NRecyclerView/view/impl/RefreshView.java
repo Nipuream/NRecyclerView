@@ -43,6 +43,8 @@ public class RefreshView extends BaseRefreshView {
     @Override
     public void setState(int state) {
 
+        super.setState(state);
+
         if(currentState == state)
             return;
 

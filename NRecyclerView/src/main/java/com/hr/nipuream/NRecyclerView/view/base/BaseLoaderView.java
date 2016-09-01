@@ -13,6 +13,8 @@ public class BaseLoaderView extends LinearLayout implements LoaderStateInterface
 
     protected Context context;
 
+    protected int state = IDLE;
+
     public BaseLoaderView(Context context) {
         super(context);
         this.context = context;
@@ -24,7 +26,12 @@ public class BaseLoaderView extends LinearLayout implements LoaderStateInterface
 
     @Override
     public void setState(int state) {
+         this.state = state;
+    }
 
+    @Override
+    public int getState() {
+        return state;
     }
 
 

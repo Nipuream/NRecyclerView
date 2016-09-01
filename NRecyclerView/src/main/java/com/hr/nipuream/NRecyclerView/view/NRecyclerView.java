@@ -7,30 +7,37 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.OnScrollListener;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+
 import com.hr.nipuream.NRecyclerView.view.base.BaseLayout;
 import com.hr.nipuream.NRecyclerView.view.base.BaseLoaderView;
 import com.hr.nipuream.NRecyclerView.view.base.BaseRefreshView;
 import com.hr.nipuream.NRecyclerView.view.base.HeaderStateInterface;
+import com.hr.nipuream.NRecyclerView.view.base.InnerBaseView;
 import com.hr.nipuream.NRecyclerView.view.base.LoaderStateInterface;
 import com.hr.nipuream.NRecyclerView.view.impl.LoaderView;
 import com.hr.nipuream.NRecyclerView.view.impl.RefreshView;
+import com.hr.nipuream.NRecyclerView.view.inner.AdZoomView;
 
 /**
- * 描述：
+ * 描述：控制Item加载行为
  * 作者：Nipuream
  * 时间: 2016-08-01 16:42
  * 邮箱：571829491@qq.com
  */
-public class NRecyclerView extends BaseLayout {
+public class NRecyclerView extends BaseLayout{
 
     private RecyclerView.LayoutManager layoutManager;
     private InnerAdapter adapter;
     private ViewGroup headerView;
     private final RecyclerView.AdapterDataObserver mDataObserver = new DataObserver();
+
+    public static final String NONE = "none";
+    public static final String ADZOOM = "AdZoomView";
 
     public NRecyclerView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -40,10 +47,62 @@ public class NRecyclerView extends BaseLayout {
         this.headerView = headerView;
     }
 
-    private View AdtureView;
+    private ViewGroup AdtureView;
 
-    public void setAdtureView(View view){
-        this.AdtureView = view;
+
+    /**
+     * Set adventure view , The view is belong to contentview.
+     * You must set AdventureView before setAdapter.
+     * @param view
+     */
+    public void setAdtureView(ViewGroup view){
+        AdtureView = view;
+        if(contentView != null)
+            ((InnerBaseView)contentView).setAdView(AdtureView);
+    }
+
+    private View errorView;
+
+
+    /**
+     * Add load error view that contain Adventure view.
+     * @param view   The error view.
+     * @param isWrap  The error view is wrap parent view content or match parent.
+     */
+    public void setErrorView(View view,boolean isWrap){
+        if(AdtureView == null)
+            throw new IllegalStateException("You should setAdtureView at first");
+
+        if(view == null) return;
+
+        errorView = view;
+        LayoutParams lp = null;
+        if(isWrap)
+            lp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        else{
+            Rect rect = new Rect();
+            getGlobalVisibleRect(rect);
+            lp =  new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,rect.bottom - rect.top - AdtureView.getHeight());
+        }
+
+        if(footerView != null)
+            footerView.setVisibility(View.INVISIBLE);
+
+        AdtureView.addView(view,AdtureView.getChildCount(),lp);
+    }
+
+    /**
+     * Remove error view.
+     */
+    public void removeErrorView(){
+        if(AdtureView != null && errorView != null){
+
+            if(footerView != null)
+                footerView.setVisibility(View.VISIBLE);
+
+            AdtureView.removeView(errorView);
+            errorView = null;
+        }
     }
 
     @Override
@@ -56,26 +115,46 @@ public class NRecyclerView extends BaseLayout {
     }
 
     @Override
-    protected ViewGroup CreateEntryView(final Context context, AttributeSet attrs) {
-        contentView = new RecyclerView(context,attrs);
+    protected ViewGroup CreateEntryView(final Context context, AttributeSet attrs,String innerView) {
+
+        if(TextUtils.equals(innerView,NONE)){
+            contentView = new InnerBaseView(context,attrs);
+        }else if(TextUtils.equals(innerView,ADZOOM)){
+            contentView = new AdZoomView(context,attrs);
+            setPullRefreshEnable(false);
+            setOverScrollEnable(false);
+        }
 
         ((RecyclerView)contentView).addOnScrollListener(new OnScrollListener() {
+
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
+                IsFirstItem = getFirstVisibleItem() ==0 ? true:false;
+
+                IsLastItem = (getLastVisibleItem() + 1 == adapter.getItemCount())?true:false;
             }
-            //todo we should load more when recyclerView scroll to bottom.
+
+            //TODO we should load more when recyclerView scroll to bottom.
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
 
-                IsFirstItem = getFirstVisibleItem()==0?true:false;
-                int lastVisiblePos = getLastVisibleItem();
-                if( (newState == RecyclerView.SCROLL_STATE_IDLE) &&
-                        lastVisiblePos +1 == adapter.getItemCount()){
-                    IsLastItem = true;
+                if(IsFirstItem){
+                    View firstView = contentView.getChildAt(0);
+                    if(firstView != null){
+                        Rect rect = getLocalRectPosition(firstView);
+                        if(rect.top == 0)
+                            ((InnerBaseView)contentView).setFistItem(true);
+                    }
+                }
 
-                    //已经滑动到最底端
+//                int lastVisiblePos = getLastVisibleItem();
+                if( (newState == RecyclerView.SCROLL_STATE_IDLE) && IsLastItem && !isNestLoad){
+//                        lastVisiblePos +1 == adapter.getItemCount()){
+//                    IsLastItem = true;
+
+                    //TODO 已经滑动到最底端
                     if(!isLoadingMore && isPullLoadEnable){
                         View lastView = contentView.getChildAt(contentView.getChildCount()-1);
                         Rect rect = getLocalRectPosition(lastView);
@@ -84,10 +163,11 @@ public class NRecyclerView extends BaseLayout {
                         }
                     }
                 }
-                else
-                    IsLastItem = false;
+//                else
+//                    IsLastItem = false;
             }
         });
+
         return contentView;
     }
 
@@ -119,7 +199,7 @@ public class NRecyclerView extends BaseLayout {
                 firstVisblePos = ((GridLayoutManager) layoutManager).findFirstVisibleItemPosition();
             else if(layoutManager instanceof StaggeredGridLayoutManager)
             {
-               int[] firstVisblePosSpan =  ((StaggeredGridLayoutManager) layoutManager).findFirstVisibleItemPositions(new int[((StaggeredGridLayoutManager) layoutManager).getSpanCount()]);
+                int[] firstVisblePosSpan =  ((StaggeredGridLayoutManager) layoutManager).findFirstVisibleItemPositions(new int[((StaggeredGridLayoutManager) layoutManager).getSpanCount()]);
                 firstVisblePos = firstVisblePosSpan[0];
             }
         }
@@ -138,6 +218,10 @@ public class NRecyclerView extends BaseLayout {
         return maxVal;
     }
 
+    /**
+     * Set contentView
+     * @param viewGroup
+     */
     public void setEntryView(ViewGroup viewGroup){
         try{
             removeViewInLayout(contentView);
@@ -150,6 +234,9 @@ public class NRecyclerView extends BaseLayout {
         }
     }
 
+    /**
+     * Reset contentView
+     */
     public void resetEntryView(){
         try{
             if(standView != null){
@@ -163,13 +250,17 @@ public class NRecyclerView extends BaseLayout {
         }catch (Exception e){
             e.printStackTrace();
         }
-
     }
 
-    public void addItemDecoration(RecyclerView.ItemDecoration decor){
+    /**
+     * @param decor
+     * @param size decor height
+     */
+    public void addItemDecoration(RecyclerView.ItemDecoration decor,int size){
         if(contentView != null)
         {
             ((RecyclerView)contentView).addItemDecoration(decor);
+            ITEM_DIVIDE_SIZE = size;
         }
         else
             throw new IllegalStateException("You hasn't add contentView in baseLayout");
@@ -179,6 +270,7 @@ public class NRecyclerView extends BaseLayout {
         if(contentView != null)
         {
             ((RecyclerView)contentView).addItemDecoration(decor,index);
+            ITEM_DIVIDE_SIZE = size;
         }
         else
             throw new IllegalStateException("You hasn't add contentView in baseLayout");
@@ -190,8 +282,6 @@ public class NRecyclerView extends BaseLayout {
         else
             throw new IllegalStateException("You hasn't add contentView in baseLayout");
     }
-
-
 
     @Override
     protected ViewGroup CreateLoadView(Context context) {
@@ -243,14 +333,13 @@ public class NRecyclerView extends BaseLayout {
         }
     }
 
-    //TODO update last item state.
-    public void changeState(boolean isLast){
-        IsLastItem = isLast;
-    }
+//    public void changeState(boolean isLast){
+//        Log.d("IsLastItem",IsLastItem+"");
+//        IsLastItem = isLast;
+//    }
 
 
     private class DataObserver extends RecyclerView.AdapterDataObserver {
-
 
         @Override
         public void onChanged() {
@@ -259,36 +348,36 @@ public class NRecyclerView extends BaseLayout {
             }
         }
 
-        @Override
-        public void onItemRangeInserted(int positionStart, int itemCount) {
-            if(adapter != null){
-                adapter.notifyItemRangeInserted(positionStart, itemCount);
-                changeState(getLastVisibleItem()+2==adapter.getItemCount()?true:false);
-            }
-        }
-
-        @Override
-        public void onItemRangeChanged(int positionStart, int itemCount) {
-            adapter.notifyItemRangeChanged(positionStart, itemCount);
-        }
-
-        @Override
-        public void onItemRangeChanged(int positionStart, int itemCount, Object payload) {
-            adapter.notifyItemRangeChanged(positionStart, itemCount, payload);
-        }
-
-        @Override
-        public void onItemRangeRemoved(int positionStart, int itemCount) {
-            adapter.notifyItemRangeRemoved(positionStart, itemCount);
-        }
-
-        @Override
-        public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
-            if(adapter != null){
-                adapter.notifyItemMoved(fromPosition, toPosition);
-                changeState(getLastVisibleItem()+2==adapter.getItemCount()?true:false);
-            }
-        }
+//        @Override
+//        public void onItemRangeInserted(int positionStart, int itemCount) {
+//            if(adapter != null){
+//                adapter.notifyItemRangeInserted(positionStart, itemCount);
+//                changeState(getLastVisibleItem()+1==adapter.getItemCount()?true:false);
+//            }
+//        }
+//
+//        @Override
+//        public void onItemRangeChanged(int positionStart, int itemCount) {
+//            adapter.notifyItemRangeChanged(positionStart, itemCount);
+//        }
+//
+//        @Override
+//        public void onItemRangeChanged(int positionStart, int itemCount, Object payload) {
+//            adapter.notifyItemRangeChanged(positionStart, itemCount, payload);
+//        }
+//
+//        @Override
+//        public void onItemRangeRemoved(int positionStart, int itemCount) {
+//            adapter.notifyItemRangeRemoved(positionStart, itemCount);
+//        }
+//
+//        @Override
+//        public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+//            if(adapter != null){
+//                adapter.notifyItemMoved(fromPosition, toPosition);
+//                changeState(getLastVisibleItem()+1==adapter.getItemCount()?true:false);
+//            }
+//        }
     };
 
 

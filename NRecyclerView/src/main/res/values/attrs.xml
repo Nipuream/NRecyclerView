@@ -10,6 +10,7 @@
         <attr name="over_scroll" format="boolean"/>
         <attr name="layout_color" format="color"/>
         <attr name="contentview_color" format="color"/>
+        <attr name="inner_view" format="string"/>
     </declare-styleable>
 
 </resources>

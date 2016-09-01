@@ -32,6 +32,7 @@ public class LoaderView extends BaseLoaderView {
 
     @Override
     public void setState(int state) {
+        super.setState(state);
         switch (state){
             case IDLE:
                 stateTv.setText(context.getString(R.string.pull_load_more));

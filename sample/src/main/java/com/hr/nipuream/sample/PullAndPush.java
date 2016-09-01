@@ -52,7 +52,7 @@ public class PullAndPush extends AppCompatActivity implements
         });
 
         recyclerMagicView = (NRecyclerView) findViewById(R.id.recyclerMagicView);
-        recyclerMagicView.addItemDecoration(new HorizontalDividerItemDecoration.Builder(this).marginResId(R.dimen.margin_left).build());
+        recyclerMagicView.addItemDecoration(new HorizontalDividerItemDecoration.Builder(this).marginResId(R.dimen.margin_left).build(),2);
         recyclerMagicView.setItemAnimator(new DefaultItemAnimator());
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
@@ -63,7 +63,7 @@ public class PullAndPush extends AppCompatActivity implements
         recyclerMagicView.setLayoutManager(layoutManager);
         recyclerMagicView.setOnRefreshAndLoadingListener(this);
 
-        View view = LayoutInflater.from(this).inflate(R.layout.adventure_layout,(ViewGroup)findViewById(android.R.id.content),false);
+        ViewGroup view = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.adventure_layout,(ViewGroup)findViewById(android.R.id.content),false);
         recyclerMagicView.setAdtureView(view);
 
         datas = Arrays.asList(getResources().getStringArray(R.array.data));
@@ -95,6 +95,13 @@ public class PullAndPush extends AppCompatActivity implements
             protected void onPostExecute(Integer integer) {
                 super.onPostExecute(integer);
                 if(integer == 1){
+
+                    //TODO If successfully.
+                    recyclerMagicView.removeErrorView();
+
+                    //TODO The NRecyclerView can't loadmore anymore currentlly,So we should set it true according net call back data.
+                    recyclerMagicView.setPullLoadEnable(currentPage>=totalPages?false:true);
+
                     recyclerMagicView.resetEntryView();
                     addItems();
                     adapter.setItems(currentDatas);
@@ -128,13 +135,13 @@ public class PullAndPush extends AppCompatActivity implements
             protected void onPostExecute(Integer integer) {
                 super.onPostExecute(integer);
 
-                    if(currentPage >= totalPages){
-                        recyclerMagicView.pullNoMoreEvent();
-                    }else{
-                        addItems();
-                        adapter.setItems(currentDatas);
-                        recyclerMagicView.endLoadingMore();
-                    }
+                if(currentPage >= totalPages){
+                    recyclerMagicView.pullNoMoreEvent();
+                }else{
+                    addItems();
+                    adapter.setItems(currentDatas);
+                    recyclerMagicView.endLoadingMore();
+                }
 
             }
         }.execute();
@@ -169,19 +176,34 @@ public class PullAndPush extends AppCompatActivity implements
                 state = 1;
                 break;
             case R.id.over_scroll:
+            {
                 recyclerMagicView.setPullLoadEnable(false);
                 recyclerMagicView.setPullRefreshEnable(false);
-                break;
+            }
+            break;
             case R.id.error:
+            {
                 ViewGroup errorView = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.load_error,(ViewGroup) findViewById(android.R.id.content),false);
                 recyclerMagicView.setEntryView(errorView);
-                break;
+            }
+            break;
             case R.id.reset:
+            {
                 state = 1;
                 recyclerMagicView.setPullLoadEnable(true);
                 recyclerMagicView.setPullRefreshEnable(true);
                 recyclerMagicView.resetEntryView();
-                break;
+            }
+            break;
+            case R.id.add_error:
+            {
+                adapter.clearData();
+                //load error. Set can't load more.
+                recyclerMagicView.setPullLoadEnable(false);
+                ViewGroup errorView = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.load_error,(ViewGroup) findViewById(android.R.id.content),false);
+                recyclerMagicView.setErrorView(errorView,false);
+            }
+            break;
         }
 
         return super.onOptionsItemSelected(item);
@@ -211,6 +233,11 @@ public class PullAndPush extends AppCompatActivity implements
         public void setItems(List<String> data){
             this.data = data;
             this.notifyDataSetChanged();
+        }
+
+        public void clearData(){
+            this.data.clear();
+            notifyDataSetChanged();
         }
 
         @Override

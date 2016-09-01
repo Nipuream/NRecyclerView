@@ -18,7 +18,14 @@
     <item
         android:id="@+id/error"
         android:orderInCategory="100"
-        android:title="Load error"
+        android:title="Replace contentview"
+        />
+
+
+    <item
+        android:id="@+id/add_error"
+        android:orderInCategory="100"
+        android:title="Add error view"
         />
 
     <item
