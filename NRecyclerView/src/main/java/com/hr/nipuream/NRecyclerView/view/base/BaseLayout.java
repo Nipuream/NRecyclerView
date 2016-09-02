@@ -9,7 +9,6 @@ import android.support.v4.view.NestedScrollingParentHelper;
 import android.support.v4.view.ViewCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -18,6 +17,8 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.Scroller;
 import com.hr.nipuream.NRecyclerView.R;
+import com.hr.nipuream.NRecyclerView.view.util.Logger;
+import java.math.BigDecimal;
 
 /**
  * 描述：最外层的布局，支持嵌套滚动
@@ -433,17 +434,35 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
     }
 
     public void pullMoreEvent(){
-        if(isPullLoadEnable)
-        {
-            if(loaderView != null)
+
+            if(isPullLoadEnable)
             {
-                loaderView.setState(LoaderStateInterface.LOADING_MORE);
-                scrollTo(0,loaderView.getHeight());
-                isLoadingMore = true;
-                IsLastItem = true;
-                if(l != null) l.load();
+                if(loaderView != null)
+                {
+                    loaderView.setState(LoaderStateInterface.LOADING_MORE);
+//                scrollTo(0,loaderView.getHeight());
+
+                    /**
+                     * 捕获到contentView滑动的速度，当滑动到底端的时候
+                     * 根据速度来显示正在加载，这样显得更加圆滑
+                     */
+//                int duration = (int) (loaderView.getHeight()/velocityY);
+                    BigDecimal height = new BigDecimal(loaderView.getHeight());
+                    BigDecimal velocity = new BigDecimal(velocityY);
+
+                    BigDecimal time = height.divide(velocity,3,BigDecimal.ROUND_HALF_UP);
+                    double value = time.doubleValue() * 1000;
+                    int duration = (int) value;
+
+                    Logger.getLogger().i("duration = "+duration);
+                    startMoveAnim(0,loaderView.getHeight(),duration);
+
+                    isLoadingMore = true;
+                    IsLastItem = true;
+                    if(l != null) l.load();
+                }
             }
-        }
+
     }
 
 
@@ -470,13 +489,17 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                 //TODO 把contentView底下的子View 滚上来，看起来就没有违和感
                 contentView.scrollBy(0,loaderView.getHeight());
                 isLoadingMore = false;
+                isNestConfilct = false;
+//                velocityY = 0;
             }
         }
     }
 
     public void pullEvent(float moveY){
+
         int value = (int) Math.abs(moveY);
-        Log.d("state",state+"");
+        Logger.getLogger().d("state = "+state);
+
         if(moveY > 0){
             if(state == CONTENT_VIEW_STATE.PULL)
             {
@@ -552,6 +575,7 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
     }
 
 
+
     /**
      * 调整布局中各个控件的位置
      */
@@ -573,6 +597,12 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
     }
 
 
+
+    //TODO =========================================== 嵌套滚动 ==================================================
+
+
+    private boolean isNest = true;
+
     @Override
     public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
 
@@ -582,13 +612,18 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
          * 因为每次这个方法会拦截事件，虽然拦截没有处理任何事情，返回给BaseLayout处理还是会出现小许的卡顿，
          * 不信可以亲试
          */
-        boolean isNest = true;
         if(loaderView != null)
             isNest = (loaderView.getState() ==
                     LoaderStateInterface.NO_MORE)?false:true;
         //--------------------------------------------------------------------------------
 
-        return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 && isNest;
+
+        /**
+         * 1、 垂直滚动才嵌套
+         * 2、isNest 嵌套满足的条件
+         * 3、为了防止用户PUSH loaderView的height显示没有一半会缩回去，此时再PUSH会导致事件都会被消费。
+         */
+        return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 && isNest && !isNestConfilct;
     }
 
     @Override
@@ -599,41 +634,51 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
     @Override
     public void onStopNestedScroll(View child) {
 
+        Logger.getLogger().d("回调--->onStopNestedScroll----state = "+state);
         mNestedScrollingParentHelper.onStopNestedScroll(child);
 
         if(state == CONTENT_VIEW_STATE.PUSH){
-            if(standView == null){
-                if(isPullLoadEnable){
-                    //TODO LOADMORE...
-                    if(loaderView !=null)
-                    {
-                        int absUpy = Math.abs(nestMoveY);
+            Logger.getLogger().d("处理PUSH 结果");
+            handlePushNestStop();
+        }
+        nestMoveY = 0;
+    }
 
-                        if((absUpy*resistance) < loaderView.getHeight())
-                        {
-                            startMoveAnim(getScrollY(),-getScrollY() ,duration);
-                        }else{
-                            if(isPullLoadEnable){
-                                startMoveAnim(getScrollY(),-(Math.abs(getScrollY())-loaderView.getHeight()),duration);
-                                loaderView.setState(LoaderStateInterface.LOADING_MORE);
-                                isLoadingMore = true;
-                                if(l !=null)  l.load();
-                            }
+
+    private boolean isNestConfilct = false;
+
+    private void handlePushNestStop(){
+        if(standView == null){
+            if(isPullLoadEnable){
+                //TODO LOADMORE...
+                if(loaderView !=null)
+                {
+                    int absUpy = Math.abs(nestMoveY);
+
+                    if((absUpy*resistance) < loaderView.getHeight())
+                    {
+                        startMoveAnim(getScrollY(),-getScrollY(),duration);
+                        isNestConfilct = true;
+                    }else{
+                        if(isPullLoadEnable){
+                            startMoveAnim(getScrollY(),-(Math.abs(getScrollY())-loaderView.getHeight()),duration);
+                            loaderView.setState(LoaderStateInterface.LOADING_MORE);
+                            isLoadingMore = true;
+                            if(l !=null)  l.load();
                         }
                     }
-                }else{
-                    if(overScroll)
-                        startMoveAnim(getScrollY(),-getScrollY() ,duration);
                 }
             }else{
-                startMoveAnim(getScrollY(),-getScrollY() ,duration);
+                if(overScroll)
+                    startMoveAnim(getScrollY(),-getScrollY() ,duration);
             }
-            //TODO  把状态设置为NORMAL,因为onNestStop方法会调用多次
-            state = CONTENT_VIEW_STATE.NORMAL;
-            isNestLoad = false;
+        }else{
+            startMoveAnim(getScrollY(),-getScrollY() ,duration);
         }
 
-        nestMoveY = 0;
+        //TODO  把状态设置为NORMAL,因为onNestStop方法会调用多次
+        state = CONTENT_VIEW_STATE.NORMAL;
+        isNestLoad = false;
     }
 
     @Override
@@ -667,9 +712,7 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                 consumed[1] = dy;
             }
            //---------------------------------------------------------------------
-
         }
-
     }
 
     @Override
@@ -677,16 +720,19 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
         return false;
     }
 
+    protected float velocityY;
+
     @Override
     public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
-        Log.d("velocityY",velocityY+"");
+
+        Logger.getLogger().d("fling velocityY = "+velocityY);
+        this.velocityY = Math.abs(velocityY);
 
         //----------------------------------------------------------
         /**
          * 如果用户一直用手拖着，不放然后从中间位置迅猛放下，会导致无法加载现象和onNestStop一样
          */
         isNestLoad = false;
-        state = CONTENT_VIEW_STATE.NORMAL;
         //---------------------------------------------------------
 
         return false;
