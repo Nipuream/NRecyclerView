@@ -9,7 +9,7 @@ package com.hr.nipuream.NRecyclerView.view.base;
 public interface HeaderStateInterface {
 
     /**
-     * 闲置状态
+     * 下拉刷新
      */
     public static final int IDLE = 0x12;
 
@@ -21,7 +21,7 @@ public interface HeaderStateInterface {
 
 
     /**
-     * 下拉刷新
+     * 释放刷新
      */
     public static final int RELEASE_REFRESH = 0x14;
 

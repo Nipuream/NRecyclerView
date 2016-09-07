@@ -71,6 +71,7 @@ public class RefreshView extends BaseRefreshView {
                 }
                 break;
         }
+        currentState = state;
     }
 
 

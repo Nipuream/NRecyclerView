@@ -435,41 +435,42 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
             IsLastItem = true;
             if(loaderView != null) loaderView.setState(LoaderStateInterface.IDLE);
             currentPages = 1;
+            if(refreshView != null) refreshView.setState(HeaderStateInterface.IDLE);
         }
     }
 
     public void pullMoreEvent(){
 
-            if(isPullLoadEnable)
+        if(isPullLoadEnable)
+        {
+            if(loaderView != null)
             {
-                if(loaderView != null)
-                {
-                    loaderView.setState(LoaderStateInterface.LOADING_MORE);
+                loaderView.setState(LoaderStateInterface.LOADING_MORE);
 //                scrollTo(0,loaderView.getHeight());
 
-                    /**
-                     * 捕获到contentView滑动的速度，当滑动到底端的时候
-                     * 根据速度来显示正在加载，这样显得更加圆滑
-                     */
+                /**
+                 * 捕获到contentView滑动的速度，当滑动到底端的时候
+                 * 根据速度来显示正在加载，这样显得更加圆滑
+                 */
 //                int duration = (int) (loaderView.getHeight()/velocityY);
-                    BigDecimal height = new BigDecimal(loaderView.getHeight());
-                    BigDecimal velocity = new BigDecimal(velocityY);
+                BigDecimal height = new BigDecimal(loaderView.getHeight());
+                BigDecimal velocity = new BigDecimal(velocityY);
 
-                    BigDecimal time = height.divide(velocity,3,BigDecimal.ROUND_HALF_UP);
-                    double value = time.doubleValue() * 1000;
-                    int duration = (int) value;
+                BigDecimal time = height.divide(velocity,3,BigDecimal.ROUND_HALF_UP);
+                double value = time.doubleValue() * 1000;
+                int duration = (int) value;
 
-                    Logger.getLogger().i("duration = "+duration);
-                    startMoveAnim(0,loaderView.getHeight(),duration);
+                Logger.getLogger().i("duration = "+duration);
+                startMoveAnim(0,loaderView.getHeight(),duration);
 
-                    isLoadingMore = true;
-                    IsLastItem = true;
-                    currentPages++;
-                    if(currentPages  == totalPages)
-                        setPullLoadEnable(false);
-                    if(l != null) l.load();
-                }
+                isLoadingMore = true;
+                IsLastItem = true;
+                currentPages++;
+                if(currentPages  == totalPages)
+                    setPullLoadEnable(false);
+                if(l != null) l.load();
             }
+        }
     }
 
 
@@ -488,6 +489,39 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
         },500);
     }
 
+    /**
+     * 模仿 PullToRefresh
+     * 但是实现方式和它并不同，这种方式更为简便
+     */
+    public void pullOverScroll(){
+        try{
+
+            Logger.getLogger().e("mIsBeingDragged = "+mIsBeingDragged +"/ isRefreshing = "+isRefreshing + "/ isPullRefreshEnable = "+isPullRefreshEnable + "/ velocityY = "+velocityY);
+
+            if(!mIsBeingDragged && !isRefreshing && isPullRefreshEnable && velocityY > 0){
+
+                int overScrollY = (int) (velocityY/100);
+
+                if(overScrollY > refreshView.getHeight())
+                    overScrollY = refreshView.getHeight();
+
+                startMoveAnim(getScrollY(),-overScrollY,200);
+                postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        scrollTo(0,0);
+                        //暂时的解决策略，还没有想到更好的解决方案
+                        if(loaderView.getState() != LoaderStateInterface.NO_MORE)
+                            velocityY = 0;
+                    }
+                },250);
+            }
+        }catch (Exception e){
+            Logger.getLogger().e(e.toString());
+        }
+    }
+
+
     public void endLoadingMore(){
         if(isLoadingMore()){
             if(loaderView != null)
@@ -497,6 +531,14 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                 contentView.scrollBy(0,loaderView.getHeight());
                 isLoadingMore = false;
                 isNestConfilct = false;
+
+                /**
+                 * 设置 LoaderView 的 state的用意是
+                 * 不再让BaseLayout 处理　nestScroll，否则在最底端 PUSH的时候会消耗事件
+                 * @see 嵌套滑动条件
+                 */
+                if(currentPages == totalPages)
+                    loaderView.setState(LoaderStateInterface.NO_MORE);
 //                velocityY = 0;
             }
         }
@@ -622,8 +664,6 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                     LoaderStateInterface.NO_MORE)?false:true;
         //--------------------------------------------------------------------------------
 
-        Logger.getLogger().d("isNest = "+isNest + "/ isNestConfilct = "+isNestConfilct);
-
         /**
          * 1、垂直滚动才嵌套
          * 2、isNest 嵌套满足的条件
@@ -633,11 +673,8 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
          * isNestConfilct 为true.在NRecyclerView的onScrollListener里面去改变这个状态
          * @See {@link NRecyclerView}
          *
-         * @date 2016/9/7
-         * 4.必须是isPullLoadEnable 为 true 才设置 nestScroll 否则毫无意义
-         *
          */
-        return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 && isNest && !isNestConfilct && isPullLoadEnable;
+        return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 && isNest && !isNestConfilct;
     }
 
     @Override
@@ -728,7 +765,7 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                 consumed[0] = dx;
                 consumed[1] = dy;
             }
-           //---------------------------------------------------------------------
+            //---------------------------------------------------------------------
         }
     }
 

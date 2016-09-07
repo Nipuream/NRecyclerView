@@ -136,7 +136,9 @@ public class NRecyclerView extends BaseLayout{
             setOverScrollEnable(false);
         }
 
-        ((RecyclerView)contentView).addOnScrollListener(new OnScrollListener() {
+        ((InnerBaseView)contentView).setOverScrollMode(InnerBaseView.OVER_SCROLL_ALWAYS);
+
+        ((InnerBaseView)contentView).addOnScrollListener(new OnScrollListener() {
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
@@ -147,6 +149,13 @@ public class NRecyclerView extends BaseLayout{
 
                 //解决 isNestConfilct 导致的小bug
                 isNestConfilct = false;
+
+                View firstView = contentView.getChildAt(0);
+                if(firstView != null){
+                    if(IsFirstItem && getLocalRectPosition(firstView).top ==0)
+                        pullOverScroll();
+                }
+
             }
 
             //TODO we should load more when recyclerView scroll to bottom.
@@ -179,6 +188,7 @@ public class NRecyclerView extends BaseLayout{
                 }
 //                else
 //                    IsLastItem = false;
+
             }
         });
 
