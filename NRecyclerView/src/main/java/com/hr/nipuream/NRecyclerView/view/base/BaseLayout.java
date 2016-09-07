@@ -87,6 +87,10 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
     private NestedScrollingParentHelper mNestedScrollingParentHelper;
 
 
+    protected int totalPages = -1;
+
+    protected int currentPages = 1;
+
     public enum CONTENT_VIEW_STATE{
         NORMAL,
         PUSH,
@@ -94,9 +98,7 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
     }
 
     protected CONTENT_VIEW_STATE state = CONTENT_VIEW_STATE.NORMAL;
-
     protected LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-
 
     public BaseLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -143,7 +145,7 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
         footerView = CreateLoadView(context);
 
         /**
-         * 线性布局摆放很有讲究，其中HeaderView和FooterView在屏幕
+         * 线性布局，其中HeaderView和FooterView在屏幕
          * 的外面，如果添加顺序为 headerView,contentView,FooterView,
          * 那么，很可惜，你始终看不到FooterView，因为ContentView占据的
          * 位置是match_parent，解决的方案是 先添加FooterView,然后再
@@ -391,7 +393,6 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                                 if(loaderView !=null)
                                 {
                                     int absUpy = (int) Math.abs(upY);
-
                                     if((absUpy*resistance) < loaderView.getHeight())
                                     {
                                         startMoveAnim(getScrollY(),-getScrollY() ,duration);
@@ -400,6 +401,9 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                                             startMoveAnim(getScrollY(),-(Math.abs(getScrollY())-loaderView.getHeight()),duration);
                                             loaderView.setState(LoaderStateInterface.LOADING_MORE);
                                             isLoadingMore = true;
+                                            currentPages++;
+                                            if(currentPages == totalPages)
+                                                setPullLoadEnable(false);
                                             if(l !=null)
                                                 l.load();
                                         }
@@ -422,7 +426,6 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
         return super.onTouchEvent(event);
     }
 
-
     public void endRefresh(){
         if(isRefreshing()){
             startMoveAnim(getScrollY(), Math.abs(getScrollY()), duration);
@@ -430,6 +433,8 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
             isRefreshing = false;
             //TODO 我们将会加载第一页数据
             IsLastItem = true;
+            if(loaderView != null) loaderView.setState(LoaderStateInterface.IDLE);
+            currentPages = 1;
         }
     }
 
@@ -459,10 +464,12 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
 
                     isLoadingMore = true;
                     IsLastItem = true;
+                    currentPages++;
+                    if(currentPages  == totalPages)
+                        setPullLoadEnable(false);
                     if(l != null) l.load();
                 }
             }
-
     }
 
 
@@ -574,8 +581,6 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
         this.l = l;
     }
 
-
-
     /**
      * 调整布局中各个控件的位置
      */
@@ -617,13 +622,22 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                     LoaderStateInterface.NO_MORE)?false:true;
         //--------------------------------------------------------------------------------
 
+        Logger.getLogger().d("isNest = "+isNest + "/ isNestConfilct = "+isNestConfilct);
 
         /**
-         * 1、 垂直滚动才嵌套
+         * 1、垂直滚动才嵌套
          * 2、isNest 嵌套满足的条件
          * 3、为了防止用户PUSH loaderView的height显示没有一半会缩回去，此时再PUSH会导致事件都会被消费。
+         *
+         * 条件三 有个小bug 当用户PUSH LoaderView 一半的时候，缩回。然后再往上拉一段距离，再PUSH 此时
+         * isNestConfilct 为true.在NRecyclerView的onScrollListener里面去改变这个状态
+         * @See {@link NRecyclerView}
+         *
+         * @date 2016/9/7
+         * 4.必须是isPullLoadEnable 为 true 才设置 nestScroll 否则毫无意义
+         *
          */
-        return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 && isNest && !isNestConfilct;
+        return (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 && isNest && !isNestConfilct && isPullLoadEnable;
     }
 
     @Override
@@ -645,7 +659,7 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
     }
 
 
-    private boolean isNestConfilct = false;
+    protected boolean isNestConfilct = false;
 
     private void handlePushNestStop(){
         if(standView == null){
@@ -664,6 +678,9 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                             startMoveAnim(getScrollY(),-(Math.abs(getScrollY())-loaderView.getHeight()),duration);
                             loaderView.setState(LoaderStateInterface.LOADING_MORE);
                             isLoadingMore = true;
+                            currentPages++;
+                            if(currentPages == totalPages)
+                                setPullLoadEnable(false);
                             if(l !=null)  l.load();
                         }
                     }

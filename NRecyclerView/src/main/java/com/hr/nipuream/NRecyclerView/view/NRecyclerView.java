@@ -49,6 +49,8 @@ public class NRecyclerView extends BaseLayout{
 
     private ViewGroup AdtureView;
 
+    private ViewGroup BottomView;
+
 
     /**
      * Set adventure view , The view is belong to contentview.
@@ -61,8 +63,17 @@ public class NRecyclerView extends BaseLayout{
             ((InnerBaseView)contentView).setAdView(AdtureView);
     }
 
-    private View errorView;
 
+    /**
+     * Set bottom view that last position at contentview.
+     * @param view
+     */
+    public void setBottomView(ViewGroup view){
+        BottomView = view;
+    }
+
+
+    private View errorView;
 
     /**
      * Add load error view that contain Adventure view.
@@ -130,9 +141,12 @@ public class NRecyclerView extends BaseLayout{
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                IsFirstItem = getFirstVisibleItem() ==0 ? true:false;
 
+                IsFirstItem = getFirstVisibleItem() ==0 ? true:false;
                 IsLastItem = (getLastVisibleItem() + 1 == adapter.getItemCount())?true:false;
+
+                //解决 isNestConfilct 导致的小bug
+                isNestConfilct = false;
             }
 
             //TODO we should load more when recyclerView scroll to bottom.
@@ -333,11 +347,10 @@ public class NRecyclerView extends BaseLayout{
         }
     }
 
-//    public void changeState(boolean isLast){
-//        Log.d("IsLastItem",IsLastItem+"");
-//        IsLastItem = isLast;
-//    }
 
+    public void setTotalPages(int total){
+        this.totalPages = total;
+    }
 
     private class DataObserver extends RecyclerView.AdapterDataObserver {
 
@@ -347,39 +360,7 @@ public class NRecyclerView extends BaseLayout{
                 adapter.notifyDataSetChanged();
             }
         }
-
-//        @Override
-//        public void onItemRangeInserted(int positionStart, int itemCount) {
-//            if(adapter != null){
-//                adapter.notifyItemRangeInserted(positionStart, itemCount);
-//                changeState(getLastVisibleItem()+1==adapter.getItemCount()?true:false);
-//            }
-//        }
-//
-//        @Override
-//        public void onItemRangeChanged(int positionStart, int itemCount) {
-//            adapter.notifyItemRangeChanged(positionStart, itemCount);
-//        }
-//
-//        @Override
-//        public void onItemRangeChanged(int positionStart, int itemCount, Object payload) {
-//            adapter.notifyItemRangeChanged(positionStart, itemCount, payload);
-//        }
-//
-//        @Override
-//        public void onItemRangeRemoved(int positionStart, int itemCount) {
-//            adapter.notifyItemRangeRemoved(positionStart, itemCount);
-//        }
-//
-//        @Override
-//        public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
-//            if(adapter != null){
-//                adapter.notifyItemMoved(fromPosition, toPosition);
-//                changeState(getLastVisibleItem()+1==adapter.getItemCount()?true:false);
-//            }
-//        }
     };
-
 
     private class InnerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
 
@@ -387,6 +368,7 @@ public class NRecyclerView extends BaseLayout{
 
         private static final int TYPE_ADVENTRUE = 14;
         private static final int TYPE_NORMAL = 15;
+        private static final int TYPE_BOTTOM = 16;
 
         public InnerAdapter(RecyclerView.Adapter adapter){
             this.adapter = adapter;
@@ -418,55 +400,67 @@ public class NRecyclerView extends BaseLayout{
                 ViewGroup.LayoutParams lp = holder.itemView.getLayoutParams();
                 if (lp != null
                         && lp instanceof StaggeredGridLayoutManager.LayoutParams
-                        && (holder.getLayoutPosition()==0)) {
+                        && (holder.getLayoutPosition() == 0)) {
                     StaggeredGridLayoutManager.LayoutParams p = (StaggeredGridLayoutManager.LayoutParams) lp;
                     p.setFullSpan(true);
                 }
             }
         }
 
+
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            if(viewType == TYPE_ADVENTRUE){
+
+            if(viewType == TYPE_ADVENTRUE)
                 return new InnerViewHolder(AdtureView);
+
+            if(viewType == TYPE_BOTTOM && currentPages==totalPages){
+                return new InnerViewHolder(BottomView);
             }
+
             return adapter.onCreateViewHolder(parent,viewType);
         }
 
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-            if(AdtureView != null){
+
+            if(getItemViewType(0) == TYPE_ADVENTRUE){
                 if(position == 0)
                     return;
-                int adjPosition = position - 1;
-                int adapterCount;
-                if (adapter != null) {
-                    adapterCount = adapter.getItemCount();
-                    if (adjPosition < adapterCount) {
-                        adapter.onBindViewHolder(holder, adjPosition);
-                        return;
+                int adjPoi =  -- position;
+                if(adapter != null) {
+                    if(adjPoi < adapter.getItemCount()){
+                        adapter.onBindViewHolder(holder,adjPoi);
                     }
                 }
-            }else{
-                adapter.onBindViewHolder(holder,position);
+                return;
             }
+
+            adapter.onBindViewHolder(holder,position);
         }
 
         @Override
         public int getItemViewType(int position) {
-            if(AdtureView != null)
+            if(position == 0)
             {
-                if(position == 0)
-                    return TYPE_ADVENTRUE;
-                return TYPE_NORMAL;
+                return AdtureView == null?TYPE_NORMAL:TYPE_ADVENTRUE;
             }
+            else if(position == getItemCount()-1 && currentPages == totalPages)
+                return BottomView == null?TYPE_NORMAL:TYPE_BOTTOM;
             else
                 return TYPE_NORMAL;
         }
 
         @Override
         public int getItemCount() {
-            return AdtureView == null ? adapter.getItemCount():adapter.getItemCount()+1;
+
+            int count = adapter.getItemCount();
+            if(AdtureView != null)
+                count++;
+            if(BottomView != null && currentPages == totalPages){
+                count ++;
+            }
+            return count;
         }
 
         private class InnerViewHolder extends RecyclerView.ViewHolder{
@@ -475,4 +469,6 @@ public class NRecyclerView extends BaseLayout{
             }
         }
     }
+
+
 }

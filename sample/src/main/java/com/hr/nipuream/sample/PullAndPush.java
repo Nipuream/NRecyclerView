@@ -14,10 +14,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import com.hr.nipuream.NRecyclerView.view.NRecyclerView;
 import com.yqritc.recyclerviewflexibledivider.HorizontalDividerItemDecoration;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -63,14 +61,18 @@ public class PullAndPush extends AppCompatActivity implements
         recyclerMagicView.setLayoutManager(layoutManager);
         recyclerMagicView.setOnRefreshAndLoadingListener(this);
 
-        ViewGroup view = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.adventure_layout,(ViewGroup)findViewById(android.R.id.content),false);
-        recyclerMagicView.setAdtureView(view);
+        ViewGroup adVentureView = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.adventure_layout,(ViewGroup)findViewById(android.R.id.content),false);
+        recyclerMagicView.setAdtureView(adVentureView);
+
+        ViewGroup bottomView = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.bottom_layout,(ViewGroup)findViewById(android.R.id.content),false);
+        recyclerMagicView.setBottomView(bottomView);
 
         datas = Arrays.asList(getResources().getStringArray(R.array.data));
 
         addItems();
         adapter = new MyAdapter(currentDatas);
         recyclerMagicView.setAdapter(adapter);
+        recyclerMagicView.setTotalPages(5);
     }
 
 

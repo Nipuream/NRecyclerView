@@ -28,8 +28,6 @@ public class LoaderView extends BaseLoaderView {
 //        initViews(context);
     }
 
-
-
     @Override
     public void setState(int state) {
         super.setState(state);
@@ -50,7 +48,6 @@ public class LoaderView extends BaseLoaderView {
                 stateTv.setText(context.getString(R.string.no_more));
                 progressBar.setVisibility(GONE);
                 break;
-
         }
     }
 

@@ -26,15 +26,10 @@ public class RefreshView extends BaseRefreshView {
     private TextView headerTv;
     private ProgressBar progressBar;
     private ImageView refreshIv;
-
     private Animation mRotateUpAnim;
     private Animation mRotateDownAnim;
-
     private final int ROTATE_ANIM_DURATION = 180;
-
     private int currentState = IDLE;
-
-
 
     public RefreshView(Context context) {
         super(context);
@@ -42,7 +37,6 @@ public class RefreshView extends BaseRefreshView {
 
     @Override
     public void setState(int state) {
-
         super.setState(state);
 
         if(currentState == state)
@@ -77,7 +71,6 @@ public class RefreshView extends BaseRefreshView {
                 }
                 break;
         }
-        currentState = state;
     }
 
 
