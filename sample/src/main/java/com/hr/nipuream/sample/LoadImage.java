@@ -12,19 +12,19 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
 import com.hr.nipuream.NRecyclerView.view.NRecyclerView;
 import com.hr.nipuream.sample.util.Images;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class LoadImage extends AppCompatActivity  implements
@@ -61,10 +61,18 @@ public class LoadImage extends AppCompatActivity  implements
         recyclerMagicView.setLayoutManager(layoutManager);
         recyclerMagicView.setOnRefreshAndLoadingListener(this);
 
+        ViewGroup adVentureView = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.adventure_layout,(ViewGroup)findViewById(android.R.id.content),false);
+        recyclerMagicView.setAdtureView(adVentureView);
+
+        ViewGroup bottomView = (ViewGroup) LayoutInflater.from(this).inflate(R.layout.bottom_layout,(ViewGroup)findViewById(android.R.id.content),false);
+        recyclerMagicView.setBottomView(bottomView);
+
         images.addAll(Arrays.asList(Images.imageThumbUrls));
         addImages();
         adapter = new LoadImageAdapter(currentImages);
         recyclerMagicView.setAdapter(adapter);
+
+        recyclerMagicView.setTotalPages(5);
     }
 
     private void addImages(){
@@ -180,37 +188,32 @@ public class LoadImage extends AppCompatActivity  implements
     class LoadImageAdapter extends RecyclerView.Adapter<LoadImageAdapter.ViewHolder>{
 
         private List<String> images;
-        private int screenWidth;
-        private Random random;
 
+        private int largeCardHeight, smallCardHeight;
 
         public LoadImageAdapter(List<String> images){
             this.images = images;
             DisplayMetrics dm = new DisplayMetrics();
             //获取屏幕信息
             getWindowManager().getDefaultDisplay().getMetrics(dm);
-            screenWidth = dm.widthPixels;
-            random = new Random();
+            largeCardHeight = (int)LoadImage.this.getResources().getDisplayMetrics().density * 300;
+            smallCardHeight = (int)LoadImage.this.getResources().getDisplayMetrics().density * 200;
         }
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.load_image_item,parent,false);
-            if(isStaggered){
-                View cardView = view.findViewById(R.id.load_image_cardview);
-                float typedValue = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,random.nextInt(200)+50,getResources().getDisplayMetrics());
-                ViewGroup.LayoutParams lp = cardView.getLayoutParams();
-                lp.height = (int) typedValue;
-                lp.width = random.nextInt(screenWidth/2)+screenWidth/2;
-                cardView.setLayoutParams(lp);
-            }
             return new ViewHolder(view);
         }
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
 
+            if(isStaggered)
+                holder.cardView.getLayoutParams().height = position % 2 != 0 ? largeCardHeight : smallCardHeight;
+
             SampleApp.instance.getmImageLoader().get(images.get(position),holder.iv);
+
         }
 
         @Override

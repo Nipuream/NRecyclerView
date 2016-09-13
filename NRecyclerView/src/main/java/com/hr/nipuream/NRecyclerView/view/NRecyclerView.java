@@ -22,6 +22,7 @@ import com.hr.nipuream.NRecyclerView.view.base.LoaderStateInterface;
 import com.hr.nipuream.NRecyclerView.view.impl.LoaderView;
 import com.hr.nipuream.NRecyclerView.view.impl.RefreshView;
 import com.hr.nipuream.NRecyclerView.view.inner.AdZoomView;
+import com.hr.nipuream.NRecyclerView.view.util.Logger;
 
 /**
  * 描述：控制Item加载行为
@@ -156,6 +157,15 @@ public class NRecyclerView extends BaseLayout{
                         pullOverScroll();
                 }
 
+                if(dy < 0 )
+                    orientation = CONTENT_VIEW_SCROLL_ORIENTATION.UP;
+                else if(dy > 0)
+                    orientation = CONTENT_VIEW_SCROLL_ORIENTATION.DOWN;
+                else
+                    orientation = CONTENT_VIEW_SCROLL_ORIENTATION.IDLE;
+
+                Logger.getLogger().d("orientation = "+orientation);
+
             }
 
             //TODO we should load more when recyclerView scroll to bottom.
@@ -178,7 +188,7 @@ public class NRecyclerView extends BaseLayout{
 //                    IsLastItem = true;
 
                     //TODO 已经滑动到最底端
-                    if(!isLoadingMore && isPullLoadEnable){
+                    if(!isLoadingMore && isPullLoadEnable && !isRefreshing){
                         View lastView = contentView.getChildAt(contentView.getChildCount()-1);
                         Rect rect = getLocalRectPosition(lastView);
                         if(lastView.getHeight() == rect.bottom){
@@ -316,6 +326,11 @@ public class NRecyclerView extends BaseLayout{
         return footerView;
     }
 
+    @Override
+    protected void scrollToFirstItemPosition() {
+        ((InnerBaseView)contentView).scrollToPosition(0);
+    }
+
 
     public void setLayoutManager(RecyclerView.LayoutManager layout){
         this.layoutManager = layout;
@@ -370,6 +385,31 @@ public class NRecyclerView extends BaseLayout{
                 adapter.notifyDataSetChanged();
             }
         }
+
+        @Override
+        public void onItemRangeChanged(int positionStart, int itemCount) {
+            adapter.notifyItemRangeChanged(positionStart,itemCount);
+        }
+
+        @Override
+        public void onItemRangeChanged(int positionStart, int itemCount, Object payload) {
+            adapter.notifyItemRangeChanged(positionStart,itemCount,payload);
+        }
+
+        @Override
+        public void onItemRangeInserted(int positionStart, int itemCount) {
+            adapter.notifyItemRangeInserted(positionStart,itemCount);
+        }
+
+        @Override
+        public void onItemRangeRemoved(int positionStart, int itemCount) {
+            adapter.notifyItemRangeRemoved(positionStart,itemCount);
+        }
+
+        @Override
+        public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+            adapter.notifyItemMoved(fromPosition, toPosition);
+        }
     };
 
     private class InnerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
@@ -385,36 +425,51 @@ public class NRecyclerView extends BaseLayout{
         }
 
         @Override
-        public void onAttachedToRecyclerView(RecyclerView recyclerView) {
-            super.onAttachedToRecyclerView(recyclerView);
-            if(AdtureView !=null){
-                RecyclerView.LayoutManager manager = recyclerView.getLayoutManager();
-                if (manager instanceof GridLayoutManager) {
-                    final GridLayoutManager gridManager = ((GridLayoutManager)
-                            manager);
-                    gridManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-                        @Override
-                        public int getSpanSize(int position) {
-                            return (position == 0)
-                                    ? gridManager.getSpanCount() : 1;
-                        }
-                    });
-                }
-            }
-        }
-
-        @Override
         public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
             super.onViewAttachedToWindow(holder);
-            if(AdtureView !=null){
-                ViewGroup.LayoutParams lp = holder.itemView.getLayoutParams();
-                if (lp != null
-                        && lp instanceof StaggeredGridLayoutManager.LayoutParams
-                        && (holder.getLayoutPosition() == 0)) {
-                    StaggeredGridLayoutManager.LayoutParams p = (StaggeredGridLayoutManager.LayoutParams) lp;
-                    p.setFullSpan(true);
+            ViewGroup.LayoutParams lp = holder.itemView.getLayoutParams();
+            if(lp != null){
+                if(AdtureView != null)
+                {
+                    if(lp instanceof  StaggeredGridLayoutManager.LayoutParams && holder.getLayoutPosition() == 0){
+                        StaggeredGridLayoutManager.LayoutParams p = (StaggeredGridLayoutManager.LayoutParams) lp;
+                        p.setFullSpan(true);
+                    }
+                }
+                if(BottomView != null && currentPages == totalPages){
+                    if(lp instanceof  StaggeredGridLayoutManager.LayoutParams && holder.getLayoutPosition() == getItemCount()-1){
+                        StaggeredGridLayoutManager.LayoutParams p = (StaggeredGridLayoutManager.LayoutParams) lp;
+                        p.setFullSpan(true);
+                    }
                 }
             }
+
+            if (layoutManager instanceof GridLayoutManager) {
+                final GridLayoutManager gridManager = ((GridLayoutManager)
+                        layoutManager);
+                gridManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                    @Override
+                    public int getSpanSize(int position) {
+
+                        boolean SpanResult = false;
+
+                        if(AdtureView != null && BottomView != null )
+                            if(currentPages == totalPages){
+                                SpanResult = (position == 0 || position == getItemCount()-1);
+                            }else{
+                                SpanResult = position == 0;
+                            }
+                        else if(AdtureView != null)
+                            SpanResult = (position==0);
+                        else if(BottomView != null && currentPages == totalPages)
+                            SpanResult = (position == getItemCount() -1);
+
+                        return SpanResult
+                                ? gridManager.getSpanCount():1;
+                    }
+                });
+            }
+
         }
 
 
