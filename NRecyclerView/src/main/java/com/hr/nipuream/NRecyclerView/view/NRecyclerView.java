@@ -148,6 +148,7 @@ public class NRecyclerView extends BaseLayout{
                 IsFirstItem = getFirstVisibleItem() ==0 ? true:false;
                 IsLastItem = (getLastVisibleItem() + 1 == adapter.getItemCount())?true:false;
 
+
                 //解决 isNestConfilct 导致的小bug
                 isNestConfilct = false;
 
@@ -436,7 +437,7 @@ public class NRecyclerView extends BaseLayout{
                         p.setFullSpan(true);
                     }
                 }
-                if(BottomView != null && currentPages == totalPages){
+                if(BottomView != null && currentPages == totalPages && !isLoadingMore){
                     if(lp instanceof  StaggeredGridLayoutManager.LayoutParams && holder.getLayoutPosition() == getItemCount()-1){
                         StaggeredGridLayoutManager.LayoutParams p = (StaggeredGridLayoutManager.LayoutParams) lp;
                         p.setFullSpan(true);
@@ -454,14 +455,14 @@ public class NRecyclerView extends BaseLayout{
                         boolean SpanResult = false;
 
                         if(AdtureView != null && BottomView != null )
-                            if(currentPages == totalPages){
+                            if(currentPages == totalPages && !isLoadingMore){
                                 SpanResult = (position == 0 || position == getItemCount()-1);
                             }else{
                                 SpanResult = position == 0;
                             }
                         else if(AdtureView != null)
                             SpanResult = (position==0);
-                        else if(BottomView != null && currentPages == totalPages)
+                        else if(BottomView != null && currentPages == totalPages  && !isLoadingMore)
                             SpanResult = (position == getItemCount() -1);
 
                         return SpanResult
@@ -479,7 +480,7 @@ public class NRecyclerView extends BaseLayout{
             if(viewType == TYPE_ADVENTRUE)
                 return new InnerViewHolder(AdtureView);
 
-            if(viewType == TYPE_BOTTOM && currentPages==totalPages){
+            if(viewType == TYPE_BOTTOM && currentPages==totalPages && !isLoadingMore){
                 return new InnerViewHolder(BottomView);
             }
 
@@ -510,7 +511,7 @@ public class NRecyclerView extends BaseLayout{
             {
                 return AdtureView == null?TYPE_NORMAL:TYPE_ADVENTRUE;
             }
-            else if(position == getItemCount()-1 && currentPages == totalPages)
+            else if(position == getItemCount()-1 && currentPages == totalPages && !isLoadingMore)
                 return BottomView == null?TYPE_NORMAL:TYPE_BOTTOM;
             else
                 return TYPE_NORMAL;
@@ -518,11 +519,10 @@ public class NRecyclerView extends BaseLayout{
 
         @Override
         public int getItemCount() {
-
             int count = adapter.getItemCount();
             if(AdtureView != null)
                 count++;
-            if(BottomView != null && currentPages == totalPages){
+            if(BottomView != null && currentPages == totalPages && !isLoadingMore){
                 count ++;
             }
             return count;
