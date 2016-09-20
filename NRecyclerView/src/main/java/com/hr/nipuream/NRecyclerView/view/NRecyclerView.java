@@ -12,7 +12,6 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-
 import com.hr.nipuream.NRecyclerView.view.base.BaseLayout;
 import com.hr.nipuream.NRecyclerView.view.base.BaseLoaderView;
 import com.hr.nipuream.NRecyclerView.view.base.BaseRefreshView;
@@ -49,9 +48,7 @@ public class NRecyclerView extends BaseLayout{
     }
 
     private ViewGroup AdtureView;
-
     private ViewGroup BottomView;
-
 
     /**
      * Set adventure view , The view is belong to contentview.
@@ -64,7 +61,6 @@ public class NRecyclerView extends BaseLayout{
             ((InnerBaseView)contentView).setAdView(AdtureView);
     }
 
-
     /**
      * Set bottom view that last position at contentview.
      * @param view
@@ -72,7 +68,6 @@ public class NRecyclerView extends BaseLayout{
     public void setBottomView(ViewGroup view){
         BottomView = view;
     }
-
 
     private View errorView;
 
@@ -138,7 +133,6 @@ public class NRecyclerView extends BaseLayout{
         }
 
         ((InnerBaseView)contentView).setOverScrollMode(InnerBaseView.OVER_SCROLL_ALWAYS);
-
         ((InnerBaseView)contentView).addOnScrollListener(new OnScrollListener() {
 
             @Override
@@ -206,7 +200,6 @@ public class NRecyclerView extends BaseLayout{
         return contentView;
     }
 
-
     private int getLastVisibleItem(){
 
         int lastVisiblePos = 0;
@@ -241,7 +234,6 @@ public class NRecyclerView extends BaseLayout{
 
         return firstVisblePos;
     }
-
 
     private int getMaxElem(int[] arr) {
         int size = arr.length;
@@ -332,7 +324,6 @@ public class NRecyclerView extends BaseLayout{
         ((InnerBaseView)contentView).scrollToPosition(0);
     }
 
-
     public void setLayoutManager(RecyclerView.LayoutManager layout){
         this.layoutManager = layout;
         ((RecyclerView)contentView).setLayoutManager(layout);
@@ -373,7 +364,6 @@ public class NRecyclerView extends BaseLayout{
         }
     }
 
-
     public void setTotalPages(int total){
         this.totalPages = total;
     }
@@ -384,32 +374,39 @@ public class NRecyclerView extends BaseLayout{
         public void onChanged() {
             if (adapter != null) {
                 adapter.notifyDataSetChanged();
+                IsFirstItem = getFirstVisibleItem() ==0 ? true:false;
+                IsLastItem = (getLastVisibleItem() + 1 == adapter.getItemCount())?true:false;
             }
         }
 
         @Override
         public void onItemRangeChanged(int positionStart, int itemCount) {
-            adapter.notifyItemRangeChanged(positionStart,itemCount);
+            if(adapter != null)
+                adapter.notifyItemRangeChanged(positionStart,itemCount);
         }
 
         @Override
         public void onItemRangeChanged(int positionStart, int itemCount, Object payload) {
-            adapter.notifyItemRangeChanged(positionStart,itemCount,payload);
+            if(adapter!= null)
+                adapter.notifyItemRangeChanged(positionStart,itemCount,payload);
         }
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
-            adapter.notifyItemRangeInserted(positionStart,itemCount);
+            if(adapter != null)
+                adapter.notifyItemRangeInserted(positionStart,itemCount);
         }
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-            adapter.notifyItemRangeRemoved(positionStart,itemCount);
+            if(adapter != null)
+                adapter.notifyItemRangeRemoved(positionStart,itemCount);
         }
 
         @Override
         public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
-            adapter.notifyItemMoved(fromPosition, toPosition);
+            if(adapter != null)
+                adapter.notifyItemMoved(fromPosition, toPosition);
         }
     };
 
@@ -534,6 +531,4 @@ public class NRecyclerView extends BaseLayout{
             }
         }
     }
-
-
 }

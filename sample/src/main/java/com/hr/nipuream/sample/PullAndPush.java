@@ -75,13 +75,9 @@ public class PullAndPush extends AppCompatActivity implements
         recyclerMagicView.setTotalPages(5);
     }
 
-
-
     @Override
     public void refresh() {
-
         currentPage = 1;
-
         new AsyncTask<Void,Void,Integer>(){
             @Override
             protected Integer doInBackground(Void... params) {
@@ -121,7 +117,6 @@ public class PullAndPush extends AppCompatActivity implements
     public void load() {
 
         currentPage ++;
-
         new AsyncTask<Void,Void,Integer>(){
             @Override
             protected Integer doInBackground(Void... params) {

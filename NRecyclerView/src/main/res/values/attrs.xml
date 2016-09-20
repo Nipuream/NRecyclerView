@@ -11,6 +11,7 @@
         <attr name="layout_color" format="color"/>
         <attr name="contentview_color" format="color"/>
         <attr name="inner_view" format="string"/>
+        <attr name="loaddata_scrolleable" format="boolean"/>
     </declare-styleable>
 
 </resources>
