@@ -132,7 +132,8 @@ public class NRecyclerView extends BaseLayout{
             setOverScrollEnable(false);
         }
 
-        ((InnerBaseView)contentView).setOverScrollMode(InnerBaseView.OVER_SCROLL_ALWAYS);
+//        ((InnerBaseView)contentView).setOverScrollMode(InnerBaseView.OVER_SCROLL_ALWAYS);
+
         ((InnerBaseView)contentView).addOnScrollListener(new OnScrollListener() {
 
             @Override
@@ -141,7 +142,6 @@ public class NRecyclerView extends BaseLayout{
 
                 IsFirstItem = getFirstVisibleItem() ==0 ? true:false;
                 IsLastItem = (getLastVisibleItem() + 1 == adapter.getItemCount())?true:false;
-
 
                 //解决 isNestConfilct 导致的小bug
                 isNestConfilct = false;
@@ -190,6 +190,8 @@ public class NRecyclerView extends BaseLayout{
                             pullMoreEvent();
                         }
                     }
+
+
                 }
 //                else
 //                    IsLastItem = false;
@@ -531,4 +533,11 @@ public class NRecyclerView extends BaseLayout{
             }
         }
     }
+
+
+
+
+
+
+
 }
