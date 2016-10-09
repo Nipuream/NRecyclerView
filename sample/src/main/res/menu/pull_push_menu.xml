@@ -15,6 +15,14 @@
         android:title="OverScroll effect"
         />
 
+
+    <item
+        android:id="@+id/loaddata_scrollable"
+        android:orderInCategory="100"
+        android:title="LoadData Scrollable"
+        />
+
+
     <item
         android:id="@+id/error"
         android:orderInCategory="100"
@@ -28,10 +36,5 @@
         android:title="Add error view"
         />
 
-    <item
-        android:id="@+id/reset"
-        android:orderInCategory="100"
-        android:title="Reset"
-        />
 
 </menu>

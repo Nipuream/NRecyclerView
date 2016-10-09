@@ -93,7 +93,7 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
     /**
      * 刷新或加载时，是否允许ContentView滚动
      */
-    private boolean LoadDataScrollEnable = true;
+    protected boolean LoadDataScrollEnable = true;
 
     /**
      * BaseLayout 的状态（此状态表示 ContentView 偏离屏幕的状态）
@@ -143,7 +143,6 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
         setOrientation(VERTICAL);
         ViewConfiguration config = ViewConfiguration.get(context);
         mTouchSlop = config.getScaledTouchSlop();
-//        DecelerateInterpolator interpolator = new DecelerateInterpolator();
         AccelerateDecelerateInterpolator interpolator = new AccelerateDecelerateInterpolator();
         mScroller = new Scroller(context,interpolator);
 
@@ -230,11 +229,13 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
             return true;
 
         switch(action){
+
             case MotionEvent.ACTION_DOWN:{
                 mLastMotionY = mInitialMotionY = ev.getY();
                 mIsBeingDragged = false;
                 break;
             }
+
             case MotionEvent.ACTION_MOVE:{
 
                 if(!LoadDataScrollEnable)
@@ -391,7 +392,6 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
             case MotionEvent.ACTION_UP:{
 
                 float upY = event.getY() - mInitialMotionY;
-
                 if(mIsBeingDragged)
                 {
                     if(state == CONTENT_VIEW_STATE.PULL){
@@ -401,8 +401,10 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                             {
                                 if((int) (upY * resistance) < refreshView.getHeight())
                                 {
+
                                     //TODO GOBACK
                                     startMoveAnim(getScrollY(), Math.abs(getScrollY()), duration);
+
                                 }else{
 
                                     if(!isRefreshing){
@@ -481,9 +483,11 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
 
     public void endRefresh(){
         if(isRefreshing()){
+
             startMoveAnim(getScrollY(), Math.abs(getScrollY()), duration);
             mIsBeingDragged = false;
             isRefreshing = false;
+
             //TODO 我们将会加载第一页数据
             IsLastItem = true;
 
@@ -620,6 +624,31 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
         }
     }
 
+
+    public void pullEventWhileLoadData(int dy){
+
+
+        if(dy < 0){
+            //向上滑动
+//            if(Math.abs(dy) < refreshView.getHeight()){
+//                scrollTo(0,dy);
+//            }else{
+//                scrollTo(0,-refreshView.getHeight());
+//            }
+            scrollTo(0,-refreshView.getHeight());
+        }else{
+            //向下滑动 ---> dy > 0
+//            if(Math.abs(dy) < loaderView.getHeight()){
+//                scrollTo(0,dy);
+//            }else{
+//                scrollTo(0,loaderView.getHeight());
+//            }
+            scrollTo(0,loaderView.getHeight());
+        }
+    }
+
+
+
     public void pullEvent(float moveY){
 
         int value = (int) Math.abs(moveY);
@@ -632,8 +661,10 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                 {
                     if(!isRefreshing){
                         if(refreshView != null){
+
                             refreshView.setVisibility(View.VISIBLE);
-                            scrollTo(0, - (int)(value*resistance));
+                            scrollTo(0, -(int)(value*resistance));
+
                             if((int) (moveY * resistance) >= refreshView.getHeight())
                                 refreshView.setState(HeaderStateInterface.RELEASE_REFRESH);
                             else
@@ -824,9 +855,12 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
 
                     if((absUpy*resistance) < loaderView.getHeight())
                     {
+
                         startMoveAnim(getScrollY(),-getScrollY(),duration);
                         isNestConfilct = true;
+
                     }else{
+
                         if(isPullLoadEnable){
                             startMoveAnim(getScrollY(),-(Math.abs(getScrollY())-loaderView.getHeight()),duration);
                             loaderView.setState(LoaderStateInterface.LOADING_MORE);
@@ -836,6 +870,7 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                                 setPullLoadEnable(false);
                             if(l !=null)  l.load();
                         }
+
                     }
                 }
             }else{
@@ -948,7 +983,7 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
     }
 
     private boolean isHandleRefreshingScroll = false;
-//    private boolean isHandleLoadMoreScroll = false;
+    //    private boolean isHandleLoadMoreScroll = false;
     private boolean isHandleRefreshingWhilePull = false;
     private boolean isHandleLoadingWhilePush = false;
 
@@ -972,9 +1007,12 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
         isNestLoad = false;
         //---------------------------------------------------------
 
-        Logger.getLogger().e("=========================test = "+isFlingConfilcHandle);
-        if(isFlingConfilcHandle)
+        if(isFlingConfilcHandle){
+            /**
+             * 这里仿新浪微博处理方式
+             */
             return true;
+        }
 
         return false;
     }

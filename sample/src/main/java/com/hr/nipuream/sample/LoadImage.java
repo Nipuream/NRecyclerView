@@ -180,6 +180,12 @@ public class LoadImage extends AppCompatActivity  implements
                 recyclerMagicView.setLayoutManager(mStaggeredGridLayoutManager);
             }
             break;
+            case R.id.load_data_scroll_enable:
+            {
+                recyclerMagicView.setLoadDataScrollable(
+                        !recyclerMagicView.getLoadDataScrollable());
+            }
+                break;
         }
 
         return super.onOptionsItemSelected(item);

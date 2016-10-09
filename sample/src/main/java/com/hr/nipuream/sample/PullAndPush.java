@@ -169,8 +169,12 @@ public class PullAndPush extends AppCompatActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()){
-            case R.id.normal:
+            case R.id.normal:{
                 state = 1;
+                recyclerMagicView.setPullLoadEnable(true);
+                recyclerMagicView.setPullRefreshEnable(true);
+                recyclerMagicView.resetEntryView();
+            }
                 break;
             case R.id.over_scroll:
             {
@@ -184,14 +188,20 @@ public class PullAndPush extends AppCompatActivity implements
                 recyclerMagicView.setEntryView(errorView);
             }
             break;
-            case R.id.reset:
+//            case R.id.reset:
+//            {
+//                state = 1;
+//                recyclerMagicView.setPullLoadEnable(true);
+//                recyclerMagicView.setPullRefreshEnable(true);
+//                recyclerMagicView.resetEntryView();
+//            }
+//            break;
+            case R.id.loaddata_scrollable:
             {
-                state = 1;
-                recyclerMagicView.setPullLoadEnable(true);
-                recyclerMagicView.setPullRefreshEnable(true);
-                recyclerMagicView.resetEntryView();
+                recyclerMagicView.setLoadDataScrollable(
+                        !recyclerMagicView.getLoadDataScrollable());
             }
-            break;
+                break;
             case R.id.add_error:
             {
                 adapter.clearData();

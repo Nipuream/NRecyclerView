@@ -50,6 +50,7 @@ public class NRecyclerView extends BaseLayout{
     private ViewGroup AdtureView;
     private ViewGroup BottomView;
 
+
     /**
      * Set adventure view , The view is belong to contentview.
      * You must set AdventureView before setAdapter.
@@ -61,6 +62,7 @@ public class NRecyclerView extends BaseLayout{
             ((InnerBaseView)contentView).setAdView(AdtureView);
     }
 
+
     /**
      * Set bottom view that last position at contentview.
      * @param view
@@ -69,7 +71,9 @@ public class NRecyclerView extends BaseLayout{
         BottomView = view;
     }
 
+
     private View errorView;
+
 
     /**
      * Add load error view that contain Adventure view.
@@ -121,6 +125,11 @@ public class NRecyclerView extends BaseLayout{
         return headerView;
     }
 
+
+//    private int scrollDy = 0;
+
+    private int scrollState = RecyclerView.SCROLL_STATE_IDLE;
+
     @Override
     protected ViewGroup CreateEntryView(final Context context, AttributeSet attrs,String innerView) {
 
@@ -133,24 +142,11 @@ public class NRecyclerView extends BaseLayout{
         }
 
 //        ((InnerBaseView)contentView).setOverScrollMode(InnerBaseView.OVER_SCROLL_ALWAYS);
-
         ((InnerBaseView)contentView).addOnScrollListener(new OnScrollListener() {
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-
-                IsFirstItem = getFirstVisibleItem() ==0 ? true:false;
-                IsLastItem = (getLastVisibleItem() + 1 == adapter.getItemCount())?true:false;
-
-                //解决 isNestConfilct 导致的小bug
-                isNestConfilct = false;
-
-                View firstView = contentView.getChildAt(0);
-                if(firstView != null){
-                    if(IsFirstItem && getLocalRectPosition(firstView).top ==0)
-                        pullOverScroll();
-                }
 
                 if(dy < 0 )
                     orientation = CONTENT_VIEW_SCROLL_ORIENTATION.UP;
@@ -161,12 +157,46 @@ public class NRecyclerView extends BaseLayout{
 
                 Logger.getLogger().d("orientation = "+orientation);
 
+                IsFirstItem = getFirstVisibleItem() == 0 ? true:false;
+                IsLastItem =  (getLastVisibleItem() + 1 == adapter.getItemCount())?true:false;
+
+                //解决 isNestConfilct 导致的小bug
+                isNestConfilct = false;
+
+                View firstView = contentView.getChildAt(0);
+                if(firstView != null){
+                    if(IsFirstItem && getLocalRectPosition(firstView).top ==0){
+
+                        if(!isRefreshing)
+                            pullOverScroll();
+                        else{
+                            //如果已经在刷新过程，上提显示HeaderView
+//                            scrollDy += dy;
+                            if(scrollState != RecyclerView.SCROLL_STATE_DRAGGING)
+                                pullEventWhileLoadData(-1);
+                        }
+                    }
+                }
+
+                View lastView = contentView.getChildAt(contentView.getChildCount()-1);
+                if(lastView != null){
+                    if(IsLastItem && getLocalRectPosition(
+                            lastView).bottom == lastView.getHeight()){
+                        if(isLoadingMore){
+//                            scrollDy += dy;
+                            if(scrollState != RecyclerView.SCROLL_STATE_DRAGGING)
+                                pullEventWhileLoadData(1);
+                        }
+                    }
+                }
             }
 
-            //TODO we should load more when recyclerView scroll to bottom.
+            //TODO We should load more when recyclerView scroll to bottom.
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
+
+                scrollState = newState;
 
                 if(IsFirstItem){
                     View firstView = contentView.getChildAt(0);
@@ -176,6 +206,9 @@ public class NRecyclerView extends BaseLayout{
                             ((InnerBaseView)contentView).setFistItem(true);
                     }
                 }
+
+//                if(newState == RecyclerView.SCROLL_STATE_IDLE)
+//                    scrollDy = 0;
 
 //                int lastVisiblePos = getLastVisibleItem();
                 if( (newState == RecyclerView.SCROLL_STATE_IDLE) && IsLastItem && !isNestLoad){
@@ -190,8 +223,6 @@ public class NRecyclerView extends BaseLayout{
                             pullMoreEvent();
                         }
                     }
-
-
                 }
 //                else
 //                    IsLastItem = false;
@@ -203,7 +234,6 @@ public class NRecyclerView extends BaseLayout{
     }
 
     private int getLastVisibleItem(){
-
         int lastVisiblePos = 0;
         if(layoutManager != null)
         {
@@ -366,6 +396,19 @@ public class NRecyclerView extends BaseLayout{
         }
     }
 
+
+    /**
+     * 设置当加载数据(包括刷新和加载更多)的时候是否可以滚动
+     * @param enable
+     */
+    public void setLoadDataScrollable(boolean enable){
+        LoadDataScrollEnable = enable;
+    }
+
+    public boolean getLoadDataScrollable(){
+        return LoadDataScrollEnable;
+    }
+
     public void setTotalPages(int total){
         this.totalPages = total;
     }
@@ -500,7 +543,6 @@ public class NRecyclerView extends BaseLayout{
                 }
                 return;
             }
-
             adapter.onBindViewHolder(holder,position);
         }
 
@@ -533,11 +575,6 @@ public class NRecyclerView extends BaseLayout{
             }
         }
     }
-
-
-
-
-
 
 
 }

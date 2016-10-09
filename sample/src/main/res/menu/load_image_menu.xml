@@ -24,4 +24,10 @@
         android:title="Staggered"
         />
 
+    <item
+        android:id="@+id/load_data_scroll_enable"
+        android:orderInCategory="100"
+        android:title="LoadData ScrollAble"
+        />
+
 </menu>
