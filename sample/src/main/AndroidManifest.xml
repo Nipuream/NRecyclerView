@@ -24,7 +24,7 @@
         </activity>
         <activity android:name=".PullAndPush" />
         <activity android:name=".LoadImage" />
-        <activity android:name=".AdZoom"></activity>
+        <activity android:name=".SwipeMenu"></activity>
     </application>
 
 </manifest>

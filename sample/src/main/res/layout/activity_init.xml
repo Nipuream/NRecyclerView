@@ -29,11 +29,11 @@
         />
 
     <Button
-        android:id="@+id/adzoom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="ADVENTRUE_ZOOM"
-        android:onClick="adventrue_zoom"
+        android:text="swipe_menu"
+        android:onClick="swipe_menu"
         />
+
 
 </LinearLayout>

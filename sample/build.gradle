@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
+
     compileSdkVersion 23
     buildToolsVersion "23.0.3"
 
@@ -11,12 +12,14 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
 }
 
 buildscript {
@@ -33,4 +36,5 @@ dependencies {
     compile 'com.yqritc:recyclerview-flexibledivider:1.4.0'
     compile 'com.android.support:cardview-v7:23.2.1'
     compile 'dev.dworks.libs:volleyplus:+'
+    compile 'com.tubb.smrv:swipemenu-recyclerview:5.3.0'
 }

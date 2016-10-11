@@ -16,15 +16,14 @@ import com.hr.nipuream.NRecyclerView.view.base.BaseLayout;
 import com.hr.nipuream.NRecyclerView.view.base.BaseLoaderView;
 import com.hr.nipuream.NRecyclerView.view.base.BaseRefreshView;
 import com.hr.nipuream.NRecyclerView.view.base.HeaderStateInterface;
-import com.hr.nipuream.NRecyclerView.view.base.InnerBaseView;
 import com.hr.nipuream.NRecyclerView.view.base.LoaderStateInterface;
 import com.hr.nipuream.NRecyclerView.view.impl.LoaderView;
 import com.hr.nipuream.NRecyclerView.view.impl.RefreshView;
-import com.hr.nipuream.NRecyclerView.view.inner.AdZoomView;
 import com.hr.nipuream.NRecyclerView.view.util.Logger;
+import java.lang.reflect.Constructor;
 
 /**
- * 描述：控制Item加载行为
+ * 描述：Controller recyclerView load behavior.
  * 作者：Nipuream
  * 时间: 2016-08-01 16:42
  * 邮箱：571829491@qq.com
@@ -36,20 +35,17 @@ public class NRecyclerView extends BaseLayout{
     private ViewGroup headerView;
     private final RecyclerView.AdapterDataObserver mDataObserver = new DataObserver();
 
-    public static final String NONE = "none";
-    public static final String ADZOOM = "AdZoomView";
-
     public NRecyclerView(Context context, AttributeSet attrs) {
         super(context, attrs);
-    }
-
-    public void setHeaderView(ViewGroup headerView){
-        this.headerView = headerView;
     }
 
     private ViewGroup AdtureView;
     private ViewGroup BottomView;
 
+    /**
+     * The contentView scroll state.
+     */
+    private int scrollState = RecyclerView.SCROLL_STATE_IDLE;
 
     /**
      * Set adventure view , The view is belong to contentview.
@@ -58,10 +54,7 @@ public class NRecyclerView extends BaseLayout{
      */
     public void setAdtureView(ViewGroup view){
         AdtureView = view;
-        if(contentView != null)
-            ((InnerBaseView)contentView).setAdView(AdtureView);
     }
-
 
     /**
      * Set bottom view that last position at contentview.
@@ -69,6 +62,14 @@ public class NRecyclerView extends BaseLayout{
      */
     public void setBottomView(ViewGroup view){
         BottomView = view;
+    }
+
+    /**
+     * Set headerView that contain refreshView.
+     * @param headerView
+     */
+    public void setHeaderView(ViewGroup headerView){
+        this.headerView = headerView;
     }
 
 
@@ -107,15 +108,19 @@ public class NRecyclerView extends BaseLayout{
      */
     public void removeErrorView(){
         if(AdtureView != null && errorView != null){
-
             if(footerView != null)
                 footerView.setVisibility(View.VISIBLE);
-
             AdtureView.removeView(errorView);
             errorView = null;
         }
     }
 
+
+    /**
+     * Create the refreshView.
+     * @param context
+     * @return
+     */
     @Override
     protected ViewGroup CreateRefreshView(Context context) {
         LinearLayout headerView = new LinearLayout(context);
@@ -126,23 +131,36 @@ public class NRecyclerView extends BaseLayout{
     }
 
 
-//    private int scrollDy = 0;
-
-    private int scrollState = RecyclerView.SCROLL_STATE_IDLE;
-
+    /**
+     * The entry view that you can use recyclerview or custom by yourself.
+     * @param context
+     * @param attrs
+     * @param innerView
+     * @return
+     */
     @Override
     protected ViewGroup CreateEntryView(final Context context, AttributeSet attrs,String innerView) {
 
-        if(TextUtils.equals(innerView,NONE)){
-            contentView = new InnerBaseView(context,attrs);
-        }else if(TextUtils.equals(innerView,ADZOOM)){
-            contentView = new AdZoomView(context,attrs);
-            setPullRefreshEnable(false);
-            setOverScrollEnable(false);
+        if(TextUtils.equals(innerView,"NONE"))
+            contentView = new RecyclerView(context,attrs);
+        else{
+            //TODO create your view.
+            try {
+                Class c =  Class.forName(innerView);
+                Class[] paramtersTypes = {Context.class,AttributeSet.class};
+                Constructor constructor = c.getConstructor(paramtersTypes);
+                Object[] paramters = {context,attrs};
+                contentView = (ViewGroup) constructor.newInstance(paramters);
+             } catch (ClassNotFoundException e) {
+                throw new IllegalStateException("Don't has found "+innerView);
+            } catch (NoSuchMethodException e) {
+                throw new IllegalStateException("Don't has found "+innerView+" constructor method");
+            } catch (Exception e) {
+                throw new IllegalStateException("Create "+innerView+" error");
+            }
         }
 
-//        ((InnerBaseView)contentView).setOverScrollMode(InnerBaseView.OVER_SCROLL_ALWAYS);
-        ((InnerBaseView)contentView).addOnScrollListener(new OnScrollListener() {
+        ((RecyclerView)contentView).addOnScrollListener(new OnScrollListener() {
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
@@ -150,17 +168,16 @@ public class NRecyclerView extends BaseLayout{
 
                 if(dy < 0 )
                     orientation = CONTENT_VIEW_SCROLL_ORIENTATION.UP;
-                else if(dy > 0)
-                    orientation = CONTENT_VIEW_SCROLL_ORIENTATION.DOWN;
-                else
-                    orientation = CONTENT_VIEW_SCROLL_ORIENTATION.IDLE;
+                else{
+                    orientation = (dy > 0)?CONTENT_VIEW_SCROLL_ORIENTATION.DOWN:
+                            CONTENT_VIEW_SCROLL_ORIENTATION.IDLE;
+                }
 
                 Logger.getLogger().d("orientation = "+orientation);
-
                 IsFirstItem = getFirstVisibleItem() == 0 ? true:false;
                 IsLastItem =  (getLastVisibleItem() + 1 == adapter.getItemCount())?true:false;
 
-                //解决 isNestConfilct 导致的小bug
+                //Solve the isNestConfilct led to a small bug.
                 isNestConfilct = false;
 
                 View firstView = contentView.getChildAt(0);
@@ -170,8 +187,6 @@ public class NRecyclerView extends BaseLayout{
                         if(!isRefreshing)
                             pullOverScroll();
                         else{
-                            //如果已经在刷新过程，上提显示HeaderView
-//                            scrollDy += dy;
                             if(scrollState != RecyclerView.SCROLL_STATE_DRAGGING)
                                 pullEventWhileLoadData(-1);
                         }
@@ -196,24 +211,10 @@ public class NRecyclerView extends BaseLayout{
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
 
+                //Record recyclerView scrolll state.
                 scrollState = newState;
 
-                if(IsFirstItem){
-                    View firstView = contentView.getChildAt(0);
-                    if(firstView != null){
-                        Rect rect = getLocalRectPosition(firstView);
-                        if(rect.top == 0)
-                            ((InnerBaseView)contentView).setFistItem(true);
-                    }
-                }
-
-//                if(newState == RecyclerView.SCROLL_STATE_IDLE)
-//                    scrollDy = 0;
-
-//                int lastVisiblePos = getLastVisibleItem();
                 if( (newState == RecyclerView.SCROLL_STATE_IDLE) && IsLastItem && !isNestLoad){
-//                        lastVisiblePos +1 == adapter.getItemCount()){
-//                    IsLastItem = true;
 
                     //TODO 已经滑动到最底端
                     if(!isLoadingMore && isPullLoadEnable && !isRefreshing){
@@ -224,8 +225,6 @@ public class NRecyclerView extends BaseLayout{
                         }
                     }
                 }
-//                else
-//                    IsLastItem = false;
 
             }
         });
@@ -251,7 +250,6 @@ public class NRecyclerView extends BaseLayout{
 
     private int getFirstVisibleItem(){
         int firstVisblePos = -1;
-
         if(layoutManager != null){
             if(layoutManager instanceof  LinearLayoutManager)
                 firstVisblePos = ((LinearLayoutManager) layoutManager).findFirstVisibleItemPosition();
@@ -263,7 +261,6 @@ public class NRecyclerView extends BaseLayout{
                 firstVisblePos = firstVisblePosSpan[0];
             }
         }
-
         return firstVisblePos;
     }
 
@@ -291,6 +288,22 @@ public class NRecyclerView extends BaseLayout{
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Set debug enable.
+     * @param debug
+     */
+    public void setLogDebug(boolean debug){
+        Logger.setDebug(debug);
+    }
+
+    /**
+     * Get contentView.
+     * @return
+     */
+    public ViewGroup getEntryView(){
+        return contentView;
     }
 
     /**
@@ -351,9 +364,12 @@ public class NRecyclerView extends BaseLayout{
         return footerView;
     }
 
+    /**
+     * Scroll to first position.
+     */
     @Override
     protected void scrollToFirstItemPosition() {
-        ((InnerBaseView)contentView).scrollToPosition(0);
+        ((RecyclerView)contentView).scrollToPosition(0);
     }
 
     public void setLayoutManager(RecyclerView.LayoutManager layout){
@@ -398,7 +414,7 @@ public class NRecyclerView extends BaseLayout{
 
 
     /**
-     * 设置当加载数据(包括刷新和加载更多)的时候是否可以滚动
+     * If you can scroll when loading data (including the refresh and load more)
      * @param enable
      */
     public void setLoadDataScrollable(boolean enable){
@@ -493,9 +509,7 @@ public class NRecyclerView extends BaseLayout{
                 gridManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                     @Override
                     public int getSpanSize(int position) {
-
                         boolean SpanResult = false;
-
                         if(AdtureView != null && BottomView != null )
                             if(currentPages == totalPages && !isLoadingMore){
                                 SpanResult = (position == 0 || position == getItemCount()-1);
@@ -506,15 +520,12 @@ public class NRecyclerView extends BaseLayout{
                             SpanResult = (position==0);
                         else if(BottomView != null && currentPages == totalPages  && !isLoadingMore)
                             SpanResult = (position == getItemCount() -1);
-
                         return SpanResult
                                 ? gridManager.getSpanCount():1;
                     }
                 });
             }
-
         }
-
 
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {

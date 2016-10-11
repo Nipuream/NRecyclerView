@@ -32,8 +32,11 @@ public class InitActivity extends AppCompatActivity {
          startActivity(new Intent(this,LoadImage.class));
     }
 
-    public void adventrue_zoom(View view){
-        startActivity(new Intent(this,AdZoom.class));
+
+    public void swipe_menu(View view){
+        startActivity(new Intent(this,SwipeMenu.class));
     }
+
+
 
 }
