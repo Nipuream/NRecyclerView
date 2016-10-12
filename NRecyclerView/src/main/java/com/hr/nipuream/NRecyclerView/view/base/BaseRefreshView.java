@@ -33,4 +33,10 @@ public class BaseRefreshView extends LinearLayout implements HeaderStateInterfac
         return state;
     }
 
+    @Override
+    public void setPullDistance(int distance, int height) {
+
+    }
+
+
 }

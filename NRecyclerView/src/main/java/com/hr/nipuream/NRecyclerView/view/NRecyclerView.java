@@ -32,7 +32,6 @@ public class NRecyclerView extends BaseLayout{
 
     private RecyclerView.LayoutManager layoutManager;
     private InnerAdapter adapter;
-    private ViewGroup headerView;
     private final RecyclerView.AdapterDataObserver mDataObserver = new DataObserver();
 
     public NRecyclerView(Context context, AttributeSet attrs) {

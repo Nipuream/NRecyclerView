@@ -13,11 +13,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
 import android.widget.Scroller;
+
 import com.hr.nipuream.NRecyclerView.R;
 import com.hr.nipuream.NRecyclerView.view.util.Logger;
+
 import java.math.BigDecimal;
 
 /**
@@ -27,7 +29,8 @@ import java.math.BigDecimal;
  * 时间: 2016-08-01 15:16
  * 邮箱：571829491@qq.com
  */
-public abstract class BaseLayout extends LinearLayout implements NestedScrollingParent{
+public abstract class BaseLayout extends LinearLayout
+        implements NestedScrollingParent{
 
     private int mTouchSlop;
     protected boolean mIsBeingDragged = false;
@@ -153,9 +156,10 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
         setOrientation(VERTICAL);
         ViewConfiguration config = ViewConfiguration.get(context);
         mTouchSlop = config.getScaledTouchSlop();
-        AccelerateDecelerateInterpolator interpolator = new AccelerateDecelerateInterpolator();
-        mScroller = new Scroller(context,interpolator);
 
+//        AccelerateDecelerateInterpolator interpolator = new AccelerateDecelerateInterpolator();
+        OvershootInterpolator interpolator = new OvershootInterpolator();
+        mScroller = new Scroller(context,interpolator);
         TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.NRecyclerView);
         duration = array.getInteger(R.styleable.NRecyclerView_duration,200);
 
@@ -305,14 +309,12 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
     private Rect rect = new Rect();
 
     public Rect getLocalRectPosition(View view){
-
         if(view != null)
         {
             view.getLocalVisibleRect(rect);
             return rect;
         }else
             rect = new Rect();
-
         return rect;
     }
 
@@ -334,7 +336,6 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                 contentHeight)
             isPullLoadEnable = false;
     }
-
 
     protected abstract ViewGroup CreateRefreshView(Context context);
 
@@ -400,12 +401,9 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                             {
                                 if((int) (upY * resistance) < refreshView.getHeight())
                                 {
-
                                     //go back
                                     startMoveAnim(getScrollY(), Math.abs(getScrollY()), duration);
-
                                 }else{
-
                                     if(!isRefreshing){
                                         if(isPullRefreshEnable){
                                             //refresh
@@ -416,7 +414,6 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                                             if(l != null)
                                             {
                                                 setPullLoadEnable(FirstLoadState);
-
                                                 velocityY = 0;
                                                 l.refresh();
                                                 setPullLoadEnable(false);
@@ -478,7 +475,6 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
         }
         return super.onTouchEvent(event);
     }
-
 
     public void endRefresh(){
         if(isRefreshing()){
@@ -640,6 +636,7 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
 
                             refreshView.setVisibility(View.VISIBLE);
                             scrollTo(0, -(int)(value*resistance));
+                            refreshView.setPullDistance((int)(value*resistance),refreshView.getHeight());
 
                             if((int) (moveY * resistance) >= refreshView.getHeight())
                                 refreshView.setState(HeaderStateInterface.RELEASE_REFRESH);
@@ -731,7 +728,9 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
             footerView.layout(0,getHeight(),getWidth(),getHeight()+ loaderView.getHeight());
     }
 
-    //TODO =========================================== nest scroll ==================================================
+    //TODO =========================================== NestedScrollingParent ==================================================
+
+
     private boolean isNest = true;
 
     @Override
@@ -816,7 +815,6 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
             }
             isHandleLoadingWhilePush = false;
         }
-
         isFlingConfilcHandle = false;
     }
 
@@ -828,15 +826,11 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                 if(loaderView !=null)
                 {
                     int absUpy = Math.abs(nestMoveY);
-
                     if((absUpy*resistance) < loaderView.getHeight())
                     {
-
                         startMoveAnim(getScrollY(),-getScrollY(),duration);
                         isNestConfilct = true;
-
                     }else{
-
                         if(isPullLoadEnable){
                             startMoveAnim(getScrollY(),-(Math.abs(getScrollY())-loaderView.getHeight()),duration);
                             loaderView.setState(LoaderStateInterface.LOADING_MORE);
@@ -846,7 +840,6 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
                                 setPullLoadEnable(false);
                             if(l !=null)  l.load();
                         }
-
                     }
                 }
             }else{
@@ -951,7 +944,6 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
             }
             isHandleLoadingWhilePush = true;
         }
-
     }
 
     private boolean isHandleRefreshingScroll = false;
@@ -982,7 +974,7 @@ public abstract class BaseLayout extends LinearLayout implements NestedScrolling
 
         if(isFlingConfilcHandle){
             /**
-             * Here imitation micro-blog Sina processing mode
+             * Here imitation Sina processing way.
              */
             return true;
         }

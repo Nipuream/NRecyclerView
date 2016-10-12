@@ -19,7 +19,6 @@ public class InitActivity extends AppCompatActivity {
         toolbar.setTitle("InitActivity");
         toolbar.setTitleTextColor(Color.WHITE);
 //        toolbar.setSubtitle("Sub title");
-
         setSupportActionBar(toolbar);
 //        toolbar.setNavigationIcon(R.mipmap.ic_launcher);
     }
@@ -32,11 +31,8 @@ public class InitActivity extends AppCompatActivity {
          startActivity(new Intent(this,LoadImage.class));
     }
 
-
     public void swipe_menu(View view){
         startActivity(new Intent(this,SwipeMenu.class));
     }
-
-
 
 }

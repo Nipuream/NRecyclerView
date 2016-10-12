@@ -98,7 +98,5 @@ public class RefreshView extends BaseRefreshView {
         mRotateDownAnim.setFillAfter(true);
     }
 
-
-
 }
 

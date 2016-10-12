@@ -14,8 +14,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import com.hr.nipuream.NRecyclerView.view.NRecyclerView;
+import com.hr.nipuream.NRecyclerView.view.impl.RefreshView2;
 import com.yqritc.recyclerviewflexibledivider.HorizontalDividerItemDecoration;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -207,6 +210,10 @@ public class PullAndPush extends AppCompatActivity implements
                 recyclerMagicView.setErrorView(errorView,false);
             }
             break;
+            case R.id.change_refresh:{
+                recyclerMagicView.setRefreshView(new RefreshView2(this));
+            }
+                break;
         }
 
         return super.onOptionsItemSelected(item);

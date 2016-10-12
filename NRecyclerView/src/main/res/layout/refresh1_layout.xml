@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp">
+
+        <com.hr.nipuream.NRecyclerView.view.impl.MeiTuanRefreshFirstStepView
+            android:id="@+id/refresh_view_iv1"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            />
+        
+        <com.hr.nipuream.NRecyclerView.view.impl.MeiTuanRefreshSecondStepView
+            android:id="@+id/refresh_view_iv2"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            />
+
+        <com.hr.nipuream.NRecyclerView.view.impl.MeiTuanRefreshThirdStepView
+            android:id="@+id/refresh_view_iv3"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            />
+
+    </FrameLayout>
+
+</LinearLayout>

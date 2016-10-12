@@ -36,5 +36,11 @@
         android:title="Add error view"
         />
 
+    <item
+        android:id="@+id/change_refresh"
+        android:orderInCategory="100"
+        android:title="Change refresh"
+        />
+
 
 </menu>

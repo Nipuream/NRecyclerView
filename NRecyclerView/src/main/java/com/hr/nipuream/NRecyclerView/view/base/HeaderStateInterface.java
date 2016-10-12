@@ -41,4 +41,12 @@ public interface HeaderStateInterface {
     public int getState();
 
 
+    /**
+     * 下拉的距离
+     * @param distance
+     */
+    public void setPullDistance(int distance,int height);
+
+
+
 }

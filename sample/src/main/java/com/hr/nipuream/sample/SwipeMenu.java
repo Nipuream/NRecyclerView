@@ -103,13 +103,10 @@ public class SwipeMenu extends AppCompatActivity implements
             protected void onPostExecute(Integer integer) {
                 super.onPostExecute(integer);
                 if(integer == 1){
-
                     //TODO If successfully.
                     recyclerMagicView.removeErrorView();
-
                     //TODO The NRecyclerView can't loadmore anymore currentlly,So we should set it true according net call back data.
                     recyclerMagicView.setPullLoadEnable(currentPage>=totalPages?false:true);
-
                     recyclerMagicView.resetEntryView();
                     addItems();
                     adapter.setItems(currentDatas);
@@ -136,7 +133,6 @@ public class SwipeMenu extends AppCompatActivity implements
             @Override
             protected void onPostExecute(Integer integer) {
                 super.onPostExecute(integer);
-
                 if(currentPage >= totalPages){
                     recyclerMagicView.pullNoMoreEvent();
                 }else{
@@ -144,7 +140,6 @@ public class SwipeMenu extends AppCompatActivity implements
                     adapter.setItems(currentDatas);
                     recyclerMagicView.endLoadingMore();
                 }
-
             }
         }.execute();
     }
@@ -154,7 +149,6 @@ public class SwipeMenu extends AppCompatActivity implements
 
         protected static final int VIEW_TYPE_ENABLE = 0;
         protected static final int VIEW_TYPE_DISABLE = 1;
-
         private List<String> data;
 
         public MyAdapter(List<String> data){
@@ -180,18 +174,20 @@ public class SwipeMenu extends AppCompatActivity implements
             final String str = data.get(position);
             holder.tv.setText(str);
             final SwipeHorizontalMenuLayout itemView = (SwipeHorizontalMenuLayout) holder.itemView;
+
             holder.btOpen.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Toast.makeText(SwipeMenu.this, "Open " + str, Toast.LENGTH_SHORT).show();
                 }
             });
+
             holder.btDelete.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     // must close normal
                     itemView.smoothCloseMenu();
-                    data.remove(holder.getAdapterPosition());
+                    data.remove(holder.getAdapterPosition()-1);
                     adapter.notifyItemRemoved(holder.getAdapterPosition());
                 }
             });
@@ -213,7 +209,6 @@ public class SwipeMenu extends AppCompatActivity implements
         }
 
         public class ViewHoader extends RecyclerView.ViewHolder{
-
             private TextView tv;
             SwipeHorizontalMenuLayout sml;
             private View btOpen;
