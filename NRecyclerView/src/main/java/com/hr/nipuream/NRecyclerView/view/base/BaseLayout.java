@@ -601,6 +601,7 @@ public abstract class BaseLayout extends LinearLayout
     public void pullOverScroll(){
         try{
 
+
             if(!mIsBeingDragged && !isRefreshing && isPullRefreshEnable && velocityY > 0){
 
                 int overScrollY = (int) (velocityY/100);
@@ -802,7 +803,7 @@ public abstract class BaseLayout extends LinearLayout
          */
         boolean isAllowNest =  (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 &&
                 ( (isNest || isRefreshing) || orientation == CONTENT_VIEW_SCROLL_ORIENTATION.UP)
-                && !isNestConfilct && !overScroll;
+                && !isNestConfilct;
 
         Logger.getLogger().d("isNest = "+isNest + "/ orientation = "+orientation + "/ isNestConfilct = "+isNestConfilct);
         Logger.getLogger().w("Whether to allow nested sliding--->"+(isAllowNest? "yes":"no"));
@@ -894,7 +895,8 @@ public abstract class BaseLayout extends LinearLayout
         }
 
         //Set the status to NORMAL, because the onNestStop method will call a number of times
-        state = CONTENT_VIEW_STATE.NORMAL;
+        if(!overScroll)
+            state = CONTENT_VIEW_STATE.NORMAL;
         isNestLoad = false;
     }
 
