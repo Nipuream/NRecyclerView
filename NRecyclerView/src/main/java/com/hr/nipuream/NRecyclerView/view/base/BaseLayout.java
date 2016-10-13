@@ -515,9 +515,7 @@ public abstract class BaseLayout extends LinearLayout
     }
 
     public void endRefresh(){
-
         if(isRefreshing()){
-
             startMoveAnim(getScrollY(), Math.abs(getScrollY()), duration);
             mIsBeingDragged = false;
             isRefreshing = false;
@@ -774,7 +772,6 @@ public abstract class BaseLayout extends LinearLayout
 
     //TODO =========================================== NestedScrollingParent ==================================================
 
-
     private boolean isNest = true;
 
     @Override
@@ -789,7 +786,6 @@ public abstract class BaseLayout extends LinearLayout
                     LoaderStateInterface.NO_MORE)?false:true;
 
         /**
-         *
          * 1, vertical scrolling is nested.
          * 2、Nested conditional.
          * 3、In order to prevent the user loaderView height PUSH shows.
@@ -799,11 +795,10 @@ public abstract class BaseLayout extends LinearLayout
          * three conditions of a small bug when the user PUSH LoaderView half, retracted. Then pull a distance, and then PUSH at this time
          * true. for NRecyclerView in the onScrollListener isNestConfilct inside to change this state
          * @See {@link NRecyclerView}
-         *
          */
         boolean isAllowNest =  (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 &&
                 ( (isNest || isRefreshing) || orientation == CONTENT_VIEW_SCROLL_ORIENTATION.UP)
-                && !isNestConfilct;
+                && !isNestConfilct && !(!isPullRefreshEnable && !isPullLoadEnable);
 
         Logger.getLogger().d("isNest = "+isNest + "/ orientation = "+orientation + "/ isNestConfilct = "+isNestConfilct);
         Logger.getLogger().w("Whether to allow nested sliding--->"+(isAllowNest? "yes":"no"));
@@ -862,7 +857,9 @@ public abstract class BaseLayout extends LinearLayout
         isFlingConfilcHandle = false;
     }
 
+
     protected boolean isNestConfilct = false;
+
     private void handlePushNestStop(){
         if(standView == null){
             if(isPullLoadEnable){
@@ -895,8 +892,7 @@ public abstract class BaseLayout extends LinearLayout
         }
 
         //Set the status to NORMAL, because the onNestStop method will call a number of times
-        if(!overScroll)
-            state = CONTENT_VIEW_STATE.NORMAL;
+        state = CONTENT_VIEW_STATE.NORMAL;
         isNestLoad = false;
     }
 
@@ -935,6 +931,7 @@ public abstract class BaseLayout extends LinearLayout
                 consumed[0] = dx;
                 consumed[1] = dy;
             }
+
         }
 
         if(isRefreshing && dy > 0 ){
@@ -992,6 +989,7 @@ public abstract class BaseLayout extends LinearLayout
     private boolean isHandleRefreshingScroll = false;
     private boolean isHandleRefreshingWhilePull = false;
     private boolean isHandleLoadingWhilePush = false;
+
 
     @Override
     public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
