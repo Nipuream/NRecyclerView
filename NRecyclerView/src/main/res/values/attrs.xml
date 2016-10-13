@@ -12,6 +12,7 @@
         <attr name="contentview_color" format="color"/>
         <attr name="inner_view" format="string"/>
         <attr name="loaddata_scrolleable" format="boolean"/>
+        <attr name="interpolator" format="reference"/>
     </declare-styleable>
 
 </resources>

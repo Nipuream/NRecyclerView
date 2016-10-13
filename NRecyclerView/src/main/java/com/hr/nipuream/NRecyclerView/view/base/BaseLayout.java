@@ -13,13 +13,19 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AnticipateInterpolator;
+import android.view.animation.AnticipateOvershootInterpolator;
+import android.view.animation.BounceInterpolator;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
 import android.widget.Scroller;
-
 import com.hr.nipuream.NRecyclerView.R;
 import com.hr.nipuream.NRecyclerView.view.util.Logger;
-
 import java.math.BigDecimal;
 
 /**
@@ -158,8 +164,8 @@ public abstract class BaseLayout extends LinearLayout
         mTouchSlop = config.getScaledTouchSlop();
 
 //        AccelerateDecelerateInterpolator interpolator = new AccelerateDecelerateInterpolator();
-        OvershootInterpolator interpolator = new OvershootInterpolator();
-        mScroller = new Scroller(context,interpolator);
+//        OvershootInterpolator interpolator = new OvershootInterpolator();
+//        mScroller = new Scroller(context,interpolator);
         TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.NRecyclerView);
         duration = array.getInteger(R.styleable.NRecyclerView_duration,200);
 
@@ -171,8 +177,43 @@ public abstract class BaseLayout extends LinearLayout
         overScroll = array.getBoolean(R.styleable.NRecyclerView_over_scroll,true);
         innerView = array.getString(R.styleable.NRecyclerView_inner_view);
         LoadDataScrollEnable = array.getBoolean(R.styleable.NRecyclerView_loaddata_scrolleable,false);
-        if(TextUtils.isEmpty(innerView)) innerView = "NONE";
+        int interpolatorId = array.getResourceId(R.styleable.NRecyclerView_interpolator, android.R.anim.accelerate_decelerate_interpolator);
 
+        Interpolator interpolator = null;
+
+        switch (interpolatorId){
+            case android.R.anim.accelerate_decelerate_interpolator:
+                interpolator = new AccelerateDecelerateInterpolator();
+                break;
+            case android.R.anim.accelerate_interpolator:
+                interpolator = new AccelerateInterpolator();
+                break;
+            case android.R.anim.anticipate_interpolator:
+                interpolator = new AnticipateInterpolator();
+                break;
+            case android.R.anim.anticipate_overshoot_interpolator:
+                interpolator = new AnticipateOvershootInterpolator();
+                break;
+            case android.R.anim.bounce_interpolator:
+                interpolator = new BounceInterpolator();
+                break;
+            case android.R.anim.decelerate_interpolator:
+                interpolator = new DecelerateInterpolator();
+                break;
+            case android.R.anim.linear_interpolator:
+                interpolator = new LinearInterpolator();
+                break;
+            case android.R.anim.overshoot_interpolator:
+                interpolator = new OvershootInterpolator();
+                break;
+            default:
+                interpolator = new AccelerateDecelerateInterpolator();
+                break;
+        }
+
+        mScroller = new Scroller(context,interpolator);
+
+        if(TextUtils.isEmpty(innerView)) innerView = "NONE";
         FirstLoadState = isPullLoadEnable;
         contentView = CreateEntryView(context,attrs,innerView);
         headerView = CreateRefreshView(context);
@@ -371,9 +412,7 @@ public abstract class BaseLayout extends LinearLayout
         if (event.getAction() == MotionEvent.ACTION_DOWN
                 && event.getEdgeFlags() != 0)
             return false;
-
         if(!mScroller.isFinished())  return false;
-
         switch(event.getAction()){
             case MotionEvent.ACTION_DOWN:{
                 mLastMotionY = mInitialMotionY = event.getY();
@@ -390,7 +429,6 @@ public abstract class BaseLayout extends LinearLayout
             }
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:{
-
                 float upY = event.getY() - mInitialMotionY;
                 if(mIsBeingDragged)
                 {
@@ -477,6 +515,7 @@ public abstract class BaseLayout extends LinearLayout
     }
 
     public void endRefresh(){
+
         if(isRefreshing()){
 
             startMoveAnim(getScrollY(), Math.abs(getScrollY()), duration);
@@ -645,7 +684,7 @@ public abstract class BaseLayout extends LinearLayout
                         }
                     }
                     else{
-                        //When true is LoadDataScrollEnable, and then pull down the ContentView when to come here
+                        //When LoadDataScrollEnable is true, and then pull down the ContentView when  come here
                         scrollTo(0,- (int)(refreshView.getHeight() + value*resistance));
                     }
                 }else{
@@ -657,7 +696,11 @@ public abstract class BaseLayout extends LinearLayout
                 }
             }
         }else if(moveY < 0){
+
+            Logger.getLogger().d("--------------1----------------");
             if(state == CONTENT_VIEW_STATE.PUSH){
+
+                Logger.getLogger().d("---------------2--------------");
 
                 if(isPullLoadEnable)
                 {
@@ -735,23 +778,22 @@ public abstract class BaseLayout extends LinearLayout
 
     @Override
     public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
-        //----------------------------------------------------------------------------
         /**
          * the function of setting the isNest is if the load is over, there is no need to slide in the nested
-         * because every time this method will intercept events, although the interception did not deal with any thing, return to the BaseLayout or there will be a small carton,
-         * Don't believe you can try.
+         * because every time this method will intercept events, although the interception did not deal with any thing,
+         * return to the BaseLayout or there will be a small carton,
          */
         if(loaderView != null)
             isNest = (loaderView.getState() ==
                     LoaderStateInterface.NO_MORE)?false:true;
-        //--------------------------------------------------------------------------------
 
         /**
          *
-         * 1, vertical scrolling is nested
-         * 2、Nested conditional
-         * 3、In order to prevent the user loaderView height PUSH shows
+         * 1, vertical scrolling is nested.
+         * 2、Nested conditional.
+         * 3、In order to prevent the user loaderView height PUSH shows.
          * that there is no half will shrink back, then PUSH will cause the event will be consumed.
+         * 4、Don't nest scroll when overScroll is true.
          *
          * three conditions of a small bug when the user PUSH LoaderView half, retracted. Then pull a distance, and then PUSH at this time
          * true. for NRecyclerView in the onScrollListener isNestConfilct inside to change this state
@@ -759,7 +801,8 @@ public abstract class BaseLayout extends LinearLayout
          *
          */
         boolean isAllowNest =  (nestedScrollAxes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0 &&
-                ( (isNest || isRefreshing) || orientation == CONTENT_VIEW_SCROLL_ORIENTATION.UP) && !isNestConfilct;
+                ( (isNest || isRefreshing) || orientation == CONTENT_VIEW_SCROLL_ORIENTATION.UP)
+                && !isNestConfilct && !overScroll;
 
         Logger.getLogger().d("isNest = "+isNest + "/ orientation = "+orientation + "/ isNestConfilct = "+isNestConfilct);
         Logger.getLogger().w("Whether to allow nested sliding--->"+(isAllowNest? "yes":"no"));
@@ -882,7 +925,6 @@ public abstract class BaseLayout extends LinearLayout
             pullEvent(-nestMoveY);
             isNestLoad = true;
 
-            //------------------------------------------------------------------
             /**
              * when we PUSH process, the bottom of the FootView appears, and then down PULL,
              * then the content of contentView will also be rolling along with it, so we have to spend the event here.
@@ -891,7 +933,6 @@ public abstract class BaseLayout extends LinearLayout
                 consumed[0] = dx;
                 consumed[1] = dy;
             }
-            //---------------------------------------------------------------------
         }
 
         if(isRefreshing && dy > 0 ){
@@ -963,14 +1004,12 @@ public abstract class BaseLayout extends LinearLayout
         Logger.getLogger().d("fling velocityY = "+velocityY);
 
         this.velocityY = Math.abs(velocityY);
-        //----------------------------------------------------------
         /**
          * If the user has been dragging with hands,
          * and then quickly put down from the middle position,
          * will lead to the phenomenon can not be loaded and onNestStop
          */
         isNestLoad = false;
-        //---------------------------------------------------------
 
         if(isFlingConfilcHandle){
             /**
