@@ -24,8 +24,10 @@ import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
 import android.widget.Scroller;
+
 import com.hr.nipuream.NRecyclerView.R;
 import com.hr.nipuream.NRecyclerView.view.util.Logger;
+
 import java.math.BigDecimal;
 
 /**
@@ -34,6 +36,36 @@ import java.math.BigDecimal;
  * 作者：Nipuream
  * 时间: 2016-08-01 15:16
  * 邮箱：571829491@qq.com
+ *
+ * ===================================================================================================================
+ * linear layout, where HeaderView and FooterView are on the screen
+ * outside, if the order is headerView, contentView, FooterView,
+ * then, it's a pity that you can't always see the FooterView, because the ContentView is occupied.
+ * location is match_parent, the solution is to add the FooterView, and then again
+ * add ContentView, and finally in the onLayout () method to set up where they are located
+ * area location
+ * @See onLayout
+ *
+ * |---------------------------|<-----------
+ * |                           |   HeaderView
+ * |---------------------------|<-----------
+ * |                           |
+ * |                           |
+ * |                           |
+ * |                           |
+ * |                           |
+ * |                           |   Screen(ContentView)
+ * |                           |
+ * |                           |
+ * |                           |
+ * |                           |
+ * |                           |
+ * |                           |
+ * |-------------------------- |<------------
+ * |                           |    FooterView
+ * |---------------------------|<-------------
+ *
+ * =========================================================================================================================
  */
 public abstract class BaseLayout extends LinearLayout
         implements NestedScrollingParent{
@@ -163,9 +195,6 @@ public abstract class BaseLayout extends LinearLayout
         ViewConfiguration config = ViewConfiguration.get(context);
         mTouchSlop = config.getScaledTouchSlop();
 
-//        AccelerateDecelerateInterpolator interpolator = new AccelerateDecelerateInterpolator();
-//        OvershootInterpolator interpolator = new OvershootInterpolator();
-//        mScroller = new Scroller(context,interpolator);
         TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.NRecyclerView);
         duration = array.getInteger(R.styleable.NRecyclerView_duration,200);
 
@@ -218,35 +247,6 @@ public abstract class BaseLayout extends LinearLayout
         contentView = CreateEntryView(context,attrs,innerView);
         headerView = CreateRefreshView(context);
         footerView = CreateLoadView(context);
-
-        /**
-         * linear layout, where HeaderView and FooterView are on the screen
-         * outside, if the order is headerView, contentView, FooterView,
-         * then, it's a pity that you can't always see the FooterView, because the ContentView is occupied.
-         * location is match_parent, the solution is to add the FooterView, and then again
-         * add ContentView, and finally in the onLayout () method to set up where they are located
-         * area location
-         * @See onLayout
-         *
-         * |---------------------------|<-----------
-         * |                           |   HeaderView
-         * |---------------------------|<-----------
-         * |                           |
-         * |                           |
-         * |                           |
-         * |                           |
-         * |                           |
-         * |                           |   Screen(ContentView)
-         * |                           |
-         * |                           |
-         * |                           |
-         * |                           |
-         * |                           |
-         * |                           |
-         * |-------------------------- |<------------
-         * |                           |    FooterView
-         * |---------------------------|<-------------
-         */
         addView(headerView,layoutParams);
         addView(footerView,layoutParams);
         addView(contentView);
@@ -696,10 +696,7 @@ public abstract class BaseLayout extends LinearLayout
             }
         }else if(moveY < 0){
 
-            Logger.getLogger().d("--------------1----------------");
             if(state == CONTENT_VIEW_STATE.PUSH){
-
-                Logger.getLogger().d("---------------2--------------");
 
                 if(isPullLoadEnable)
                 {
@@ -990,7 +987,6 @@ public abstract class BaseLayout extends LinearLayout
     private boolean isHandleRefreshingWhilePull = false;
     private boolean isHandleLoadingWhilePush = false;
 
-
     @Override
     public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
         Logger.getLogger().e("consumed = "+consumed);
@@ -1001,24 +997,24 @@ public abstract class BaseLayout extends LinearLayout
 
     @Override
     public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
-        Logger.getLogger().d("fling velocityY = "+velocityY);
 
+        Logger.getLogger().d("fling velocityY = "+velocityY);
         this.velocityY = Math.abs(velocityY);
+
         /**
          * If the user has been dragging with hands,
          * and then quickly put down from the middle position,
          * will lead to the phenomenon can not be loaded and onNestStop
          */
         isNestLoad = false;
-
         if(isFlingConfilcHandle){
             /**
              * Here imitation Sina processing way.
              */
             return true;
         }
-
         return false;
+
     }
 
     @Override
