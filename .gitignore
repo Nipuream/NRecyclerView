@@ -5,8 +5,8 @@
 /captures
 *.jks
 *.apk
-/.idea
-/gradle
+/.idea/
+/gradle/
 local.properties
 gradlew
 gradlew.bat
