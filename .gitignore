@@ -1,8 +1,9 @@
 *.iml
-.gradle
+/.gradle
 .DS_Store
 /build
 /captures
-/.jks
-/.apk
-.idea
+*.jks
+*.apk
+/.idea
+/gradle
