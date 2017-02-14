@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/MagicLayout.iml" filepath="$PROJECT_DIR$/MagicLayout.iml" />
-      <module fileurl="file://$PROJECT_DIR$/NRecyclerView/NRecyclerView.iml" filepath="$PROJECT_DIR$/NRecyclerView/NRecyclerView.iml" />
+      <module fileurl="file://$PROJECT_DIR$/NRecyclerView.iml" filepath="$PROJECT_DIR$/NRecyclerView.iml" />
+      <module fileurl="file://$PROJECT_DIR$/NRecyclerView/NRecyclerView-NRecyclerView.iml" filepath="$PROJECT_DIR$/NRecyclerView/NRecyclerView-NRecyclerView.iml" />
       <module fileurl="file://$PROJECT_DIR$/sample/sample.iml" filepath="$PROJECT_DIR$/sample/sample.iml" />
     </modules>
   </component>
