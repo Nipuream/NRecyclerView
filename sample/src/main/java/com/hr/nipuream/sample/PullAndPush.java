@@ -73,6 +73,7 @@ public class PullAndPush extends AppCompatActivity implements
         adapter = new MyAdapter(currentDatas);
         recyclerMagicView.setAdapter(adapter);
         recyclerMagicView.setTotalPages(5);
+        //test
     }
 
     @Override
